@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Messages — Beacon</title>
+<style>
+  :root {
+    --bg:#16273B; --surface:#1E3048; --line:rgba(237,232,218,0.14);
+    --text:#EDE8DA; --muted:rgba(237,232,218,0.55); --accent:#C99A3B;
+    --out:#2A3A2E;
+  }
+  *{box-sizing:border-box;margin:0}
+  body{background:var(--bg);color:var(--text);font-family:Georgia,serif;
+       display:flex;flex-direction:column;height:100vh;height:100dvh;
+       max-width:680px;margin:0 auto;padding:12px}
+  header{display:flex;align-items:baseline;gap:12px;padding:4px 4px 12px}
+  header a{color:var(--accent);text-decoration:none;font-size:0.9rem}
+  h1{font-size:1.25rem;font-weight:normal}
+  #radio{margin-left:auto;font-size:0.68rem;letter-spacing:0.06em;
+         text-transform:uppercase;padding:3px 9px;border-radius:10px;
+         border:1px solid var(--line);color:var(--muted)}
+  #radio.on{color:var(--bg);background:var(--accent);border-color:var(--accent)}
+  #help{font-size:0.8rem;padding:3px 4px}
+
+  #log{flex:1;overflow-y:auto;border:1px solid var(--line);border-radius:10px;
+       background:rgba(0,0,0,0.12);padding:12px;display:flex;
+       flex-direction:column;gap:10px}
+  .msg{max-width:82%;padding:8px 12px;border-radius:10px;
+       background:var(--surface);border:1px solid var(--line);
+       font-size:0.95rem;line-height:1.4;align-self:flex-start}
+  .msg.out{align-self:flex-end;background:var(--out);
+           border-color:rgba(201,154,59,0.35)}
+  .msg.sys{align-self:center;background:none;border-style:dashed;
+           color:var(--muted);font-size:0.82rem;max-width:95%}
+  .meta{font-size:0.66rem;color:var(--muted);margin-bottom:3px;
+        letter-spacing:0.05em;display:flex;gap:8px}
+  .msg:not(.out):not(.sys) .meta{cursor:pointer}
+  .body{word-wrap:break-word}
+  #empty{color:var(--muted);text-align:center;padding:34px 12px;
+         font-size:0.88rem;align-self:center}
+
+  #composer{padding-top:10px}
+  #row1{display:flex;gap:8px;margin-bottom:8px}
+  input,button{font-family:inherit;font-size:1rem;color:var(--text);
+    background:var(--surface);border:1px solid var(--line);border-radius:8px}
+  input:focus{outline:none;border-color:var(--accent)}
+  input::placeholder{color:var(--muted)}
+  #to{width:150px;padding:10px;font-size:0.85rem}
+  #text{flex:1;padding:10px}
+  #send{width:52px;background:var(--accent);border:none;cursor:pointer;
+        display:flex;align-items:center;justify-content:center}
+  #send svg{width:20px;height:20px;color:var(--bg)}
+  #send:disabled{opacity:0.5}
+  #hint{font-size:0.7rem;color:var(--muted);padding:0 2px}
+</style>
+</head>
+<body>
+
+<header>
+  <a href="index.html">&larr; Beacon</a>
+  <h1>Messages</h1>
+  <span id="radio">radio…</span>
+  <a id="help" href="messages-help.html" aria-label="Help">Help&nbsp;?</a>
+</header>
+
+<div id="log">
+  <div id="empty">No messages yet. Sent and received radio messages
+  appear here. Tip: send "/echo hello" to run the radio board's
+  self-test.</div>
+</div>
+
+<div id="composer">
+  <div id="row1">
+    <input id="to" placeholder="To (blank = all)" autocomplete="off">
+    <input id="text" placeholder="Type a message…" autocomplete="off" maxlength="200">
+    <button id="send" aria-label="Send">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 11l18-8-8 18-2.5-7.5L3 11z"/></svg>
+    </button>
+  </div>
+  <div id="hint">Leave "To" blank to reach everyone on the mesh. Tap an
+  incoming message's sender to reply to just them.</div>
+</div>
+
+<script>
+  var since = 0, newestT = 0, empty = document.getElementById('empty');
+  var log = document.getElementById('log');
+  var toEl = document.getElementById('to');
+  var textEl = document.getElementById('text');
+  var sendBtn = document.getElementById('send');
+  var radioEl = document.getElementById('radio');
+
+  try { toEl.value = localStorage.getItem('beacon_to') || ''; } catch (e) {}
+
+  function relTime(t) {
+    if (!newestT || !t) return '';
+    var d = Math.max(0, Math.round((newestT - t) / 60000));
+    if (d < 1) return 'now';
+    if (d < 60) return d + 'm ago';
+    return Math.round(d / 60) + 'h ago';
+  }
+
+  function nearBottom() {
+    return log.scrollHeight - log.scrollTop - log.clientHeight < 80;
+  }
+
+  function add(m) {
+    if (empty) { empty.remove(); empty = null; }
+    var d = document.createElement('div');
+    var sys = (m.from === 'system');
+    d.className = 'msg' + (m.dir === 'out' ? ' out' : '') + (sys ? ' sys' : '');
+    var who = m.dir === 'out'
+      ? (m.from ? 'to ' + m.from : 'to everyone')
+      : (m.from || 'unknown');
+    d.innerHTML = '<div class="meta"><span class="who"></span>' +
+                  '<span class="t"></span></div><div class="body"></div>';
+    d.querySelector('.who').textContent = sys ? 'radio board' : who;
+    d.querySelector('.t').textContent = relTime(m.t);
+    d.querySelector('.body').textContent = m.text;
+    if (m.dir !== 'out' && !sys) {
+      d.querySelector('.meta').onclick = function () {
+        toEl.value = m.from;
+        try { localStorage.setItem('beacon_to', m.from); } catch (e) {}
+        textEl.focus();
+      };
+    }
+    log.appendChild(d);
+  }
+
+  function poll() {
+    fetch('/api/messages?since=' + since)
+      .then(function (r) { return r.json(); })
+      .then(function (list) {
+        if (!list.length) return;
+        list.forEach(function (m) { if (m.t > newestT) newestT = m.t; });
+        var stick = nearBottom();
+        list.forEach(function (m) {
+          if (m.id > since) since = m.id;
+          add(m);
+        });
+        if (stick) log.scrollTop = log.scrollHeight;
+      })
+      .catch(function () {});
+  }
+
+  function pollStatus() {
+    fetch('/api/status')
+      .then(function (r) { return r.json(); })
+      .then(function (j) {
+        var on = j.nodes && j.nodes.lora;
+        radioEl.textContent = on ? 'radio online' : 'radio offline';
+        radioEl.className = on ? 'on' : '';
+      })
+      .catch(function () {
+        radioEl.textContent = 'radio ?';
+        radioEl.className = '';
+      });
+  }
+
+  function doSend() {
+    var t = textEl.value.trim();
+    if (!t) return;
+    sendBtn.disabled = true;
+    try { localStorage.setItem('beacon_to', toEl.value.trim()); } catch (e) {}
+    fetch('/api/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: t, to: toEl.value.trim(), ch: 0 })
+    }).then(function () {
+      textEl.value = '';
+      sendBtn.disabled = false;
+      poll();
+    }).catch(function () { sendBtn.disabled = false; });
+  }
+
+  sendBtn.onclick = doSend;
+  textEl.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') { e.preventDefault(); doSend(); }
+  });
+
+  poll(); pollStatus();
+  setInterval(poll, 3000);
+  setInterval(pollStatus, 5000);
+</script>
+
+</body>
+</html>

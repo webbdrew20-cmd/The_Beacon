@@ -1,0 +1,1635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="dark">
+<title>Library — Beacon</title>
+<style>
+  /* Same design tokens as index.html / sites.html. */
+  :root {
+    --bg: #16273B;
+    --surface: #1E344A;
+    --surface-hover: #24405A;
+    --line: #2E4560;
+    --accent: #C99A3B;
+    --accent-bright: #E0B658;
+    --text: #EDE8DA;
+    --text-muted: #93A4B3;
+
+    --font-display: Georgia, 'Iowan Old Style', 'Palatino Linotype', 'Book Antiqua', serif;
+    --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --font-mono: 'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+
+    --space-1: 0.5rem;
+    --space-2: 1rem;
+    --space-3: 1.5rem;
+    --space-4: 2.5rem;
+
+    --radius: 10px;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    min-height: 100%;
+  }
+
+  body {
+    background-color: var(--bg);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240' viewBox='0 0 240 240'%3E%3Cg fill='none' stroke='%23C99A3B' stroke-opacity='0.07' stroke-width='1'%3E%3Cpath d='M-20,40 Q40,10 100,40 T220,40 T340,40'/%3E%3Cpath d='M-20,95 Q40,65 100,95 T220,95 T340,95'/%3E%3Cpath d='M-20,150 Q40,122 100,150 T220,150 T340,150'/%3E%3Cpath d='M-20,205 Q40,180 100,205 T220,205 T340,205'/%3E%3C/g%3E%3C/svg%3E");
+    background-repeat: repeat;
+    color: var(--text);
+    font-family: var(--font-body);
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+
+  .page {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: var(--space-4) var(--space-2) var(--space-3);
+  }
+
+  .home-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    text-decoration: none;
+    margin-bottom: var(--space-3);
+  }
+
+  .home-link:hover,
+  .home-link:focus-visible {
+    color: var(--accent);
+  }
+
+  h1 {
+    font-family: var(--font-display);
+    font-size: clamp(1.9rem, 6vw, 2.6rem);
+    margin: 0 0 0.5rem;
+  }
+
+  .page-desc {
+    color: var(--text-muted);
+    margin: 0 0 var(--space-4);
+  }
+
+  .site-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .site-card {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    text-decoration: none;
+    color: var(--text);
+    transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+  }
+
+  .site-card:hover,
+  .site-card:focus-visible {
+    background: var(--surface-hover);
+    border-color: var(--accent);
+    transform: translateY(-2px);
+  }
+
+  .site-card svg {
+    flex-shrink: 0;
+    width: 30px;
+    height: 30px;
+    color: var(--accent);
+  }
+
+  .site-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .site-name {
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    font-weight: 700;
+  }
+
+  .site-desc {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-top: 0.15rem;
+  }
+
+  .tick-frame::before,
+  .tick-frame::after {
+    content: "";
+    position: absolute;
+    width: 9px;
+    height: 9px;
+    opacity: 0.45;
+    transition: opacity 0.15s ease;
+    pointer-events: none;
+  }
+
+  .tick-frame::before {
+    top: 5px;
+    left: 5px;
+    border-top: 1.5px solid var(--accent);
+    border-left: 1.5px solid var(--accent);
+  }
+
+  .tick-frame::after {
+    bottom: 5px;
+    right: 5px;
+    border-bottom: 1.5px solid var(--accent);
+    border-right: 1.5px solid var(--accent);
+  }
+
+  .tick-frame:hover::before,
+  .tick-frame:hover::after,
+  .tick-frame:focus-within::before,
+  .tick-frame:focus-within::after {
+    opacity: 1;
+  }
+
+  /* ---------- Search ---------- */
+
+  .search-field {
+    position: relative;
+    margin-bottom: var(--space-3);
+  }
+
+  .search-field svg {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 18px;
+    height: 18px;
+    color: var(--text-muted);
+    pointer-events: none;
+  }
+
+  .search-field input {
+    width: 100%;
+    padding: 0.8rem 1rem 0.8rem 2.9rem;
+    font-size: 1rem;
+    font-family: var(--font-body);
+    color: var(--text);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    outline: none;
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+
+  .search-field input::placeholder {
+    color: var(--text-muted);
+  }
+
+  .search-field input:focus {
+    border-color: var(--accent);
+    background: var(--surface-hover);
+  }
+
+  .no-results {
+    display: none;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    padding: var(--space-2) 0;
+  }
+
+  footer {
+    text-align: center;
+    padding: var(--space-3) var(--space-2);
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  a:focus-visible {
+    outline: 2px solid var(--accent-bright);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <a class="home-link" href="index.html">&larr; Beacon</a>
+
+  <h1>Library</h1>
+  <p class="page-desc">Manuals, Medical, and More.</p>
+
+  <div class="search-field">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <circle cx="10.5" cy="10.5" r="6.5"/>
+      <line x1="15.5" y1="15.5" x2="21" y2="21"/>
+    </svg>
+    <input type="text" id="book-search" placeholder="Search by subject or keyword…" autocomplete="off">
+  </div>
+
+  <div class="site-list" id="site-list">
+    <a class="site-card tick-frame" href="content/library/joints/pg21531-images.html" data-keywords="woodwork joints joint shown used work method tenon shows wood piece pieces">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">Woodwork Joints</div>
+        <div class="site-desc">by Unknown</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/millitarymanual/pg26706-images.html" data-keywords="manual military training right line fire company guard left front position enemy">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">Manual of Military Training</div>
+        <div class="site-desc">by James A. Moss</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg100-h/pg100-images.html" data-keywords="complete works william shakespeare project gutenberg thou thee king lord good come">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">The Complete Works of William Shakespeare | Project Gutenberg</div>
+        <div class="site-desc">Library book</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg11-h/pg11-images.html" data-keywords="alice adventures wonderland project gutenberg said little down know like went queen">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">Alice’s Adventures in Wonderland | Project Gutenberg</div>
+        <div class="site-desc">Library book</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg1180-h/pg1180-images.html" data-keywords="sportsman xenophon gutenberg project hounds work hare chase good hunting scent boar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">The Sportsman, by Xenophon</div>
+        <div class="site-desc">Library book</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg1342-h/pg1342-images.html" data-keywords="pride prejudice project gutenberg elizabeth darcy said bennet much miss bingley jane">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">Pride and prejudice | Project Gutenberg</div>
+        <div class="site-desc">Library book</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg14264-h/pg14264-images.html" data-keywords="practice science drawing project gutenberg lines work line tone light form picture">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">The Practice &amp; Science Of Drawing | Project Gutenberg</div>
+        <div class="site-desc">Library book</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg14504-h/pg14504-images.html" data-keywords="experiments considerations touching colours colour though white made light experiment bodies much">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">Experiments and Considerations touching Colours</div>
+        <div class="site-desc">by Robert Boyle</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg14664-h/pg14664-images.html" data-keywords="things make inch inches through piece illustration made steam holes hole brass">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">Things To Make</div>
+        <div class="site-desc">by Archibald Williams</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg14986-h/pg14986-images.html" data-keywords="experimental researches electricity volume current action acid discharge water wire electric chemical">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">Experimental Researches in Electricity, Volume 1</div>
+        <div class="site-desc">by Michael Faraday</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg1513-h/pg1513-images.html" data-keywords="romeo juliet project gutenberg thou capulet love nurse thee lady friar come">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">Romeo and Juliet | Project Gutenberg</div>
+        <div class="site-desc">Library book</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg15491-h/pg15491-images.html" data-keywords="micrographia small much parts several body like part water made bodies little">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">Micrographia</div>
+        <div class="site-desc">by Robert Hooke</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg16-h/pg16-images.html" data-keywords="peter project gutenberg wendy said hook cried john time darling michael little">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">Peter Pan | Project Gutenberg</div>
+        <div class="site-desc">Library book</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg16232-h/pg16232-images.html" data-keywords="culture vegetables flowers seeds roots plants soil seed plant early ground time">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">The Culture Of Vegetables And Flowers From Seeds And Roots</div>
+        <div class="site-desc">by Sutton And Sons Reading</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg16378-h/pg16378-images.html" data-keywords="perfumery soap water rose otto acid odor spirit used made flowers extract">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">The Art of Perfumery</div>
+        <div class="site-desc">by G.W. Septimus Piesse</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg1661-h/pg1661-images.html" data-keywords="adventures sherlock holmes project gutenberg said little down well think know room">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">The Adventures of Sherlock Holmes | Project Gutenberg</div>
+        <div class="site-desc">Library book</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg16900-h/pg16900-images.html" data-keywords="first book farming soil water plant plants soils roots food seeds nitrogen">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">The First Book Of Farming</div>
+        <div class="site-desc">by Charles L. Goodrich</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg1727-h/pg1727-images.html" data-keywords="odyssey ulysses said house went come telemachus tell suitors father home ship">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">The Odyssey</div>
+        <div class="site-desc">by Homer</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg17439-h/pg17439-images.html" data-keywords="mother remedies thousand tried tested mothers united states canada water used good">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">Mother's Remedies Over One Thousand Tried and Tested Remedies from Mothers of the United States and Canada</div>
+        <div class="site-desc">by Thomas Jefferson Ritter</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg18467-h/pg18467-images.html" data-keywords="people common sense medical adviser treatment disease years time world blood buffalo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">The People’s Common Sense Medical Adviser</div>
+        <div class="site-desc">by R. V. Pierce</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg20190-h/pg20190-images.html" data-keywords="thing worth knowing water states first state good years time instead united">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">Thing Worth Knowing</div>
+        <div class="site-desc">Library book</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg20846-h/pg20846-images.html" data-keywords="handwork wood page used edge joint made plane work side tenon cutting">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">Handwork in Wood</div>
+        <div class="site-desc">by William Noyes</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg20848-h/pg20848-images.html" data-keywords="elementary study chemistry acid water oxygen hydrogen compounds carbon used solution iron">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">An Elementary Study Of Chemistry</div>
+        <div class="site-desc">by William Mcpherson, Ph.D.</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg20917-h/pg20917-images.html" data-keywords="cultivation native grape manufacture american wines wine vine good grapes varieties first">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">The Cultivation of the Native Grape, and Manufacture of American Wines</div>
+        <div class="site-desc">by George Husmann</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg21224-h/pg21224-images.html" data-keywords="dyeing cotton fabrics bath blue diamine soda salt acid black brown water">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">The Dyeing of Cotton Fabrics</div>
+        <div class="site-desc">by Franklin Beech</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg21252-h/pg21252-images.html" data-keywords="practical distiller water well still gutenberg yeast work gallons project good three">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">The Practical Distiller</div>
+        <div class="site-desc">by Samuel McHarry</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg21414-h/pg21414-images.html" data-keywords="culinary herbs plants seed leaves used plant seeds gutenberg inches project soil">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">Culinary Herbs</div>
+        <div class="site-desc">by M. G. Kains</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg21682-h/pg21682-images.html" data-keywords="project gutenberg ebook field garden vegetables america fearing burr white inches green">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">The Project Gutenberg eBook of The Field and Garden Vegetables of America by Fearing Burr, Jr.</div>
+        <div class="site-desc">Library book</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg21724-h/pg21724-images.html" data-keywords="handbook soap manufacture acid cent solution soaps water oils acids fatty soda">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">The Handbook of Soap Manufacture</div>
+        <div class="site-desc">by W. H. Simmons and H. A. Appleton</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg21965-h/pg21965-images.html" data-keywords="preventable diseases disease even body cases like first blood little years fact">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">Preventable Diseases</div>
+        <div class="site-desc">by Woods Hutchinson, A.M., M.D.</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg22107-h/pg22107-images.html" data-keywords="project gutenberg ebook wood carving george jack work tools design carved carver">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">The Project Gutenberg eBook of Wood-carving by George Jack</div>
+        <div class="site-desc">Library book</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg22298-h/pg22298-images.html" data-keywords="practical mechanics boys parts work tool make water file gutenberg tools project">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">Practical Mechanics For Boys</div>
+        <div class="site-desc">by J. S. Zerbe, M.E</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg22325-h/pg22325-images.html" data-keywords="modern lace making point design work stitches bars stitch made braid used">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">The Art of Modern Lace-Making</div>
+        <div class="site-desc">by The Butterick Publishing Co</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg22428-h/pg22428-images.html" data-keywords="contributions theory natural selection species birds form many animals nature colour group">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">Contributions to the Theory of Natural Selection</div>
+        <div class="site-desc">by Alfred Russel Wallace</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg22484-h/pg22484-images.html" data-keywords="gardening indoors glass practical guide planting care propagation house plants construction management">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">Gardening Indoors and Under Glass A Practical Guide to the Planting, Care and Propagation of House Plants, and to the Construction and Management of Hotbed, Coldframe and Small Greenhouse</div>
+        <div class="site-desc">by F. F. Rockwell</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg22657-h/pg22657-images.html" data-keywords="steam generation boiler water heat temperature boilers pressure coal degrees fuel furnace">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">Steam: its Generation and Use</div>
+        <div class="site-desc">by William T. Hornaday</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg22764-h/pg22764-images.html" data-keywords="project gutenberg ebook origin species charles darwin many varieties selection forms natural">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">The Project Gutenberg EBook of On the Origin of Species, by Charles Darwin</div>
+        <div class="site-desc">Library book</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg22766-h/pg22766-images.html" data-keywords="electricity boys current wire magnet through electric magnetic circuit made armature gutenberg">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">Electricity for Boys</div>
+        <div class="site-desc">by J. S. Zerbe, M.E</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg22771-h/pg22771-images.html" data-keywords="cattle diseases milk animal cows disease well food animals after three first">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">Cattle And Their Diseases</div>
+        <div class="site-desc">by Robert Jennings, V. S</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg22914-h/pg22914-images.html" data-keywords="sceptical chymist bodies fire chymists though salt water much body nature parts">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">The Sceptical Chymist</div>
+        <div class="site-desc">by Robert Boyle</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg23319-h/pg23319-images.html" data-keywords="elementary instruction pratical mechanical drawing line figure lines circle centre draw point">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">Elementary Instruction in Pratical Mechanical Drawing</div>
+        <div class="site-desc">by Joshua Rose, M.E.,</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg23354-h/pg23354-images.html" data-keywords="vegetable teratology flower flowers leaves stamens leaf cases plants organs case petals">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">Vegetable Teratology</div>
+        <div class="site-desc">by Maxwell T. Masters</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg23435-h/pg23435-images.html" data-keywords="farm drainage water drains land soil drain tiles feet surface inches much">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">Farm Drainage</div>
+        <div class="site-desc">by Henry F. French</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg236-h/pg236-images.html" data-keywords="jungle book said little mowgli down head bagheera back never rikki wolf">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">The Jungle Book</div>
+        <div class="site-desc">by Rudyard Kipling</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg23666-h/pg23666-images.html" data-keywords="mission furniture make part three rails posts gutenberg pieces project back ends">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">Mission Furniture, How To Make It, Part Three</div>
+        <div class="site-desc">by H.H. Windsor</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg23682-h/pg23682-images.html" data-keywords="crops methods soil improvement land clover crop manure lime plant pounds acid">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">Crops and Methods For Soil Improvement</div>
+        <div class="site-desc">by Alva Agee</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg24597-h/pg24597-images.html" data-keywords="games occasions player players game room paper gutenberg company name first children">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">Games For All Occasions</div>
+        <div class="site-desc">by Mary E. Blain</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg24923-h/pg24923-images.html" data-keywords="variation animals plants domestication wild species breeds varieties several much white length">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">The Variation of Animals and Plants Under Domestication. Vol I.</div>
+        <div class="site-desc">Library book</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg24923-h (1)/pg24923-images.html" data-keywords="variation animals plants domestication wild species breeds varieties several much white length">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">The Variation of Animals and Plants Under Domestication. Vol I.</div>
+        <div class="site-desc">Library book</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg25013-h/pg25013-images.html" data-keywords="make shoe gutenberg project work works electronic foundation terms heel copyright states">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">How to Make a Shoe</div>
+        <div class="site-desc">by Jno. P. Headley, Jr</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg25269-h/pg25269-images.html" data-keywords="elements plumbing pipe joint solder water lead used iron inch inches pipes">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">Elements of Plumbing</div>
+        <div class="site-desc">by Samuel Edward Dibble</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg25278-h/pg25278-images.html" data-keywords="amateur gardencraft plants plant flowers work garden make well season soil good">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">Amateur Gardencraft</div>
+        <div class="site-desc">by Eben E. Rexford</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg25299-h/pg25299-images.html" data-keywords="wood magic said bevis kapchack weasel down went came come choo know">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">Wood Magic</div>
+        <div class="site-desc">by Richard Jefferies</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg25373-h/pg25373-images.html" data-keywords="woodward graperies house gutenberg houses plants heat project feet roof work water">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">Woodward's Graperies</div>
+        <div class="site-desc">by Geo. E. &amp; F. W. Woodward</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg25462-h/pg25462-images.html" data-keywords="little folks handy book paper make side long gutenberg like inches together">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">Little Folks' Handy Book</div>
+        <div class="site-desc">by Lina Beard And Adelia B. Beard</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg2554-h/pg2554-images.html" data-keywords="crime punishment project gutenberg raskolnikov know said come like though sonia time">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">Crime and Punishment | Project Gutenberg</div>
+        <div class="site-desc">Library book</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg2591-h/pg2591-images.html" data-keywords="grimms fairy tales said came went little king down away took good">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">Grimms’ Fairy Tales</div>
+        <div class="site-desc">by Jacob Grimm and Wilhelm Grimm</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg26032-h/pg26032-images.html" data-keywords="american cookery xxvi november thanksgiving menus recipes home gutenberg project half water">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">American Cookery: Vol. XXVI, November, 1921, No. 4, Thanksgiving Menus And Recipes</div>
+        <div class="site-desc">by Various</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg26139-h/pg26139-images.html" data-keywords="project gutenberg ebook ontario teachers manuals nature study pupils water plants leaves">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">The Project Gutenberg eBook of Ontario Teachers' Manuals, Nature Study.</div>
+        <div class="site-desc">Library book</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg26323-h/pg26323-images.html" data-keywords="project gutenberg ebook suffrage cook book compiled kleber water sugar butter salt">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">The Project Gutenberg eBook of The Suffrage Cook Book, compiled by Mrs. L. O. Kleber.</div>
+        <div class="site-desc">Library book</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg26393-h/pg26393-images.html" data-keywords="medicinal plants philippines leaves used grams flowers seeds plant calyx fruit uses">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">The Medicinal Plants of the Philippines</div>
+        <div class="site-desc">Library book</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg2641-h/pg2641-images.html" data-keywords="room view project gutenberg lucy said miss cecil beebe bartlett honeychurch know">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">A Room With a View | Project Gutenberg</div>
+        <div class="site-desc">Library book</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg26492-h/pg26492-images.html" data-keywords="studies american fungi mushrooms edible poisonous stem pileus plant gills species plants">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">Studies of American Fungi. Mushrooms, Edible, Poisonous, etc.</div>
+        <div class="site-desc">by George Francis Atkinson, et al</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg26718-h/pg26718-images.html" data-keywords="health farm water disease milk time much well after food until gutenberg">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">Health on the Farm</div>
+        <div class="site-desc">by H. F. Harris</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg26752-h/pg26752-images.html" data-keywords="geometry equall right therefore angle unto line angles side quadrate lines triangle">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">The Way to Geometry.</div>
+        <div class="site-desc">Library book</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg26801-h/pg26801-images.html" data-keywords="village improvements farm villages work water gutenberg project life well farmer country">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">Village Improvements and Farm Villages</div>
+        <div class="site-desc">by Geo. E. Waring Jnr</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg2701-h/pg2701-images.html" data-keywords="moby dick whale project gutenberg like ship ahab though down head boat">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">Moby Dick; or The Whale | Project Gutenberg</div>
+        <div class="site-desc">Library book</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg27049-h/pg27049-images.html" data-keywords="species plantarum foliis habitat hort bauh lugdb cliff caule hist folio floribus">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">Species Plantarum IV-V</div>
+        <div class="site-desc">Library book</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg27286-h/pg27286-images.html" data-keywords="engines simply explained engine gutenberg valve project cylinder work tube small shown">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">Gas and Oil Engines Simply Explained</div>
+        <div class="site-desc">by Walter C. Runciman</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg27548-h/pg27548-images.html" data-keywords="promoting growth cucumber melon plants three inches gutenberg project water mould time">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">The Art of Promoting the Growth of the Cucumber and Melon</div>
+        <div class="site-desc">by Thomas Watkins</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg27642-h/pg27642-images.html" data-keywords="lectures navigation time latitude longitude ship course compass noon meridian star distance">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">Lectures In Navigation</div>
+        <div class="site-desc">by Lieutenant Ernest G. Draper, U.S.N.R.F.</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg27687-h/pg27687-images.html" data-keywords="steam turbines turbine water valve condenser through pressure gutenberg load vacuum project">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">Steam Turbines</div>
+        <div class="site-desc">by Hubert E. Collins</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg27713-h/pg27713-images.html" data-keywords="elements bacteriological technique tube water solution sterile agar tubes flask cent method">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">The Elements of Bacteriological Technique</div>
+        <div class="site-desc">by John William Henry Eyre</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg27943-h/pg27943-images.html" data-keywords="home medical library volume water patient fever after treatment first disease body">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">The Home Medical Library (Volume I)</div>
+        <div class="site-desc">by Kenelm Winslow</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg27944-h/pg27944-images.html" data-keywords="home medical library volume disease often water treatment patient pain skin after">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">The Home Medical Library (Volume II)</div>
+        <div class="site-desc">by Kenelm Winslow</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg28177-h/pg28177-images.html" data-keywords="insects disease fever mosquitoes flies mosquito diseases plague many species yellow house">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">Insects and Disease</div>
+        <div class="site-desc">by Rennie W. Doane</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg28335-h/pg28335-images.html" data-keywords="boys made electrical apparatus wire make current used coil through screw base">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">How Two Boys Made Their Own Electrical Apparatus</div>
+        <div class="site-desc">by Thomas M. (Thomas Matthew) St. John</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg28553-h/pg28553-images.html" data-keywords="works water through steam pressure current wheel valve pipe train cylinder piston">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">How It Works</div>
+        <div class="site-desc">by Archibald Williams</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg29086-h/pg29086-images.html" data-keywords="mushroom edible otherwise stem found white pileus figure gills plant spores color">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">The Mushroom Edible and Otherwise</div>
+        <div class="site-desc">by M. E. Hard</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg29558-h/pg29558-images.html" data-keywords="scout handbook water made make first scouts life good states know time">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">Boy Scout Handbook 1911</div>
+        <div class="site-desc">Library book</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg30775-h/pg30775-images.html" data-keywords="elements chemistry acid water oxygen caloric substances charcoal quantity part combinations hydrogen">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">Elements of Chemistry</div>
+        <div class="site-desc">by Mr Lavoisier</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg32050-h/pg32050-images.html" data-keywords="plants michigan leaves flowers high summer long stem white petals family corolla">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">The Plants Of Michigan</div>
+        <div class="site-desc">by Henry Allan Gleason, Ph. D</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg3268-h/pg3268-images.html" data-keywords="mysteries udolpho emily said montoni valancourt count heard annette after madame much">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">The Mysteries of Udolpho</div>
+        <div class="site-desc">by Ann Radcliffe</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg34114-h/pg34114-images.html" data-keywords="soap making manual acid water soaps cent used fatty oils method glycerine">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">Soap-making Manual</div>
+        <div class="site-desc">by E. G. Thomssen, Ph. D</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg34279-h/pg34279-images.html" data-keywords="handbook medical entomology species disease flies found after larv body fever blood">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">Handbook of Medical Entomology</div>
+        <div class="site-desc">by Wm. A. Riley, Ph.D., and O. A. Johanssen, Ph.D</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg34413-h/pg34413-images.html" data-keywords="love letters mary wollstonecraft gilbert imlay project gutenberg letter heart little life">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">The Love Letters of Mary Wollstonecraft to Gilbert Imlay | Project Gutenberg</div>
+        <div class="site-desc">Library book</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg39225-h/pg39225-images.html" data-keywords="modern machine shop practice work shown tool line wheel teeth diameter cutting">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">Modern Machine Shop Practice</div>
+        <div class="site-desc">by Joshua Rose, M.E</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg39713-h/pg39713-images.html" data-keywords="foundations science hypothesis value method first space without because know therefore point">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">The Foundations of Science: Science and Hypothesis, The Value of Science, Science and Method</div>
+        <div class="site-desc">by Henri Poincaré</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg42576-h/pg42576-images.html" data-keywords="common spiders united states abdomen legs middle front long cephalothorax female eyes">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">The Common Spiders of the United States</div>
+        <div class="site-desc">by James H. Emerton</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg42709-h/pg42709-images.html" data-keywords="poisons effects detection acid solution water poisoning after action case cases symptoms">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">Poisons: Their Effects and Detection</div>
+        <div class="site-desc">by Alexander Wynter Blyth</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg46680-h/pg46680-images.html" data-keywords="fishing project gutenberg trout fish water flies line salmon cast time angler">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">Fishing With the Fly | Project Gutenberg</div>
+        <div class="site-desc">Library book</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg46998-h/pg46998-images.html" data-keywords="project gutenberg ebook elements theory practice chymistry macquer acid salt water fire">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">The Project Gutenberg eBook of Elements of the Theory and Practice of Chymistry by M. Macquer..</div>
+        <div class="site-desc">Library book</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg48196-h/pg48196-images.html" data-keywords="zoology science animal life species long small water great many like animals">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">Zoology: The Science of Animal Life</div>
+        <div class="site-desc">by Ernest Ingersoll</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg49211-h/pg49211-images.html" data-keywords="botany plants plant many leaves flowers water world known often species much">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">Botany</div>
+        <div class="site-desc">by Norman Taylor</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg49513-h/pg49513-images.html" data-keywords="complete herbal project gutenberg leaves helps take water half flowers good white">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">The Complete Herbal | Project Gutenberg</div>
+        <div class="site-desc">Library book</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg5000-h/pg5000-images.html" data-keywords="notebooks leonardo vinci complete footnote light shadow body between water seen because">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">The Notebooks of Leonardo Da Vinci — Complete</div>
+        <div class="site-desc">by da Vinci Leonardo</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg51326-h/pg51326-images.html" data-keywords="principles chemistry volume water acid hydrogen oxygen solution heat sodium substances salt">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">The Principles of Chemistry Volume I (of 2)</div>
+        <div class="site-desc">by Dmitry Ivanovich Mendeleyev</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg51393-h/pg51393-images.html" data-keywords="toadstools mushrooms fungi edible poisonous charles mcilvaine robert macadam stem pileus white">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">Toadstools, Mushrooms, Fungi Edible and Poisonous, by Charles McIlvaine and Robert K. Macadam.</div>
+        <div class="site-desc">Library book</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg53143-h/pg53143-images.html" data-keywords="henley twentieth century book recipes formulas processes edited gardner dexter hiscox project">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">Henley’s Twentieth Century Book of Recipes, Formulas and Processes (1914); edited by Gardner Dexter Hiscox, 1822?–1908; A Project Gutenberg eBook.</div>
+        <div class="site-desc">Library book</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg53582-h/pg53582-images.html" data-keywords="mammals washington county length type mountains tail species distribution columbia western river">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">Mammals of Washington</div>
+        <div class="site-desc">by Walter W. Dalquest</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg53669-h/pg53669-images.html" data-keywords="technical manual portable flame thrower fuel valve pressure tank ignition head tanks">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">Technical Manual TM 3-376 A, Portable Flame Thrower M2-2</div>
+        <div class="site-desc">by U.S. War Department</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg54411-h/pg54411-images.html" data-keywords="gunpowder ammunition fire saltpetre powder century shell first used time gutenberg made">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">Gunpowder and Ammunition</div>
+        <div class="site-desc">by Henry W. L. Hime</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg55382-h/pg55382-images.html" data-keywords="field book common rocks minerals frederic brewster loomis project gutenberg ebook crystals">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">Field Book of Common Rocks and Minerals, by Frederic Brewster Loomis: a Project Gutenberg eBook</div>
+        <div class="site-desc">Library book</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg56601-h/pg56601-images.html" data-keywords="text book tanning henry procter project gutenberg ebook acid water leather tannin">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">A Text-book of Tanning, by Henry R. Procter, F.C.S., a Project Gutenberg eBook.</div>
+        <div class="site-desc">Library book</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg56795-h/pg56795-images.html" data-keywords="story book science jean henri fabre project gutenberg ebook little uncle jules">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">The Story-Book Of Science, by Jean-Henri Fabre-A Project Gutenberg eBook</div>
+        <div class="site-desc">Library book</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg57713-h/pg57713-images.html" data-keywords="animal parasites after found species body blood larv cases genus infection case">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">The Animal Parasites of Man</div>
+        <div class="site-desc">by H. B. Fantham, J. W. W. Stephens and F. V. Theobald</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg63207-h/pg63207-images.html" data-keywords="electrician wire current small coil made through connected figure inch inches shown">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">The Boy Electrician</div>
+        <div class="site-desc">Library book</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg65061-h/pg65061-images.html" data-keywords="boston cooking school cook book water salt butter sugar cream teaspoon flour">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">The Boston Cooking-school Cook Book</div>
+        <div class="site-desc">by Fannie Merritt Farmer</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg65238-h/pg65238-images.html" data-keywords="secret chimneys said anthony virginia battle lord know caterham george well think">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">The Secret of Chimneys</div>
+        <div class="site-desc">by Agatha Christie</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg67691-h/pg67691-images.html" data-keywords="pharmacographia fluckiger hanbury project gutenberg ebook acid water bark drug plant cent">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">Pharmacographia, by F. A. Fluckiger and D. Hanbury—A Project Gutenberg eBook</div>
+        <div class="site-desc">Library book</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg67979-h/pg67979-images.html" data-keywords="blue castle project gutenberg valancy said barney never little like uncle cousin">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">The Blue Castle | Project Gutenberg</div>
+        <div class="site-desc">Library book</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg69375-h/pg69375-images.html" data-keywords="automobile owner guide frank scholl project gutenberg ebook motor shaft engine valve">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">The Automobile Owner’s Guide, by Frank B. Scholl—A Project Gutenberg eBook</div>
+        <div class="site-desc">Library book</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg71928-h/pg71928-images.html" data-keywords="gunsmith manual project gutenberg made barrel breech barrels screw work lock stock">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">The Gunsmith’s Manual | Project Gutenberg</div>
+        <div class="site-desc">Library book</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg74039-h/pg74039-images.html" data-keywords="reader guide encyclopaedia britannica project gutenberg article articles john history author great">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">The Reader’s Guide to the Encyclopaedia Britannica | Project Gutenberg</div>
+        <div class="site-desc">Library book</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg75948-h/pg75948-images.html" data-keywords="book wonders project gutenberg water made illus through first time used after">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">The Book of Wonders | Project Gutenberg</div>
+        <div class="site-desc">Library book</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg76038-h/pg76038-images.html" data-keywords="pyrotechny project gutenberg cases case composition fire made piece stars paper wheel">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">Pyrotechny | Project Gutenberg</div>
+        <div class="site-desc">Library book</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg76411-h/pg76411-images.html" data-keywords="last dragon project gutenberg peter said like little grandma back down johnathan">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">The last dragon | Project Gutenberg</div>
+        <div class="site-desc">Library book</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg79110-h/pg79110-images.html" data-keywords="wild medicinal plants united states project gutenberg used family nonofficial part herb">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">Wild medicinal plants of the United States | Project Gutenberg</div>
+        <div class="site-desc">Library book</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg8084-h/pg8084-images.html" data-keywords="hunting arrow bear down arrows deer inches time long shot yards three">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">Hunting with the Bow and Arrow</div>
+        <div class="site-desc">by Saxton Pope</div>
+      </div>
+    </a>
+
+    <a class="site-card tick-frame" href="content/library/pg9550-h/pg9550-images.html" data-keywords="manual gardening bailey plants flowers plant soil good well trees early large">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">Manual of Gardening, by L. H. Bailey</div>
+        <div class="site-desc">Library book</div>
+      </div>
+    </a>
+  </div>
+
+  <p class="no-results" id="no-results">No books match that search.</p>
+
+</div>
+
+<footer>
+  Beacon
+</footer>
+
+<script>
+  // Client-side filtering only — no backend search needed for a
+  // library this size. Matches against the visible title/description
+  // plus each card's hidden data-keywords attribute, so a search for
+  // a topic can surface a book even if that exact word never appears
+  // in its title.
+  (function () {
+    var input = document.getElementById('book-search');
+    var cards = Array.prototype.slice.call(document.querySelectorAll('.site-card'));
+    var categoryLabels = Array.prototype.slice.call(document.querySelectorAll('.category-label'));
+    var noResults = document.getElementById('no-results');
+
+    function cardMatches(card, term) {
+      var name = (card.querySelector('.site-name') || {}).textContent || '';
+      var desc = (card.querySelector('.site-desc') || {}).textContent || '';
+      var keywords = card.getAttribute('data-keywords') || '';
+      var haystack = (name + ' ' + desc + ' ' + keywords).toLowerCase();
+      return haystack.indexOf(term) !== -1;
+    }
+
+    function filterBooks() {
+      var term = input.value.trim().toLowerCase();
+      var anyVisible = false;
+
+      cards.forEach(function (card) {
+        var match = term === '' || cardMatches(card, term);
+        card.style.display = match ? '' : 'none';
+        if (match) anyVisible = true;
+      });
+
+      // Hide a category label if every card in its group just got hidden
+      categoryLabels.forEach(function (label) {
+        var sibling = label.nextElementSibling;
+        var groupHasVisible = false;
+        while (sibling && !sibling.classList.contains('category-label')) {
+          if (sibling.classList.contains('site-card') && sibling.style.display !== 'none') {
+            groupHasVisible = true;
+          }
+          sibling = sibling.nextElementSibling;
+        }
+        label.style.display = groupHasVisible ? '' : 'none';
+      });
+
+      noResults.style.display = anyVisible ? 'none' : '';
+    }
+
+    if (input) {
+      input.addEventListener('input', filterBooks);
+    }
+  })();
+</script>
+
+</body>
+</html>

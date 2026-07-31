@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Weather — Beacon</title>
+<style>
+  :root {
+    --bg:#16273B; --surface:#1E3048; --line:rgba(237,232,218,0.14);
+    --text:#EDE8DA; --muted:rgba(237,232,218,0.55); --accent:#C99A3B;
+  }
+  *{box-sizing:border-box;margin:0}
+  body{background:var(--bg);color:var(--text);font-family:Georgia,serif;
+       max-width:640px;margin:0 auto;padding:16px}
+  header{display:flex;align-items:baseline;gap:14px;padding:4px 4px 16px}
+  header a{color:var(--accent);text-decoration:none;font-size:0.9rem}
+  h1{font-size:1.3rem;font-weight:normal}
+  #node{margin-left:auto;font-size:0.7rem;color:var(--muted);
+        letter-spacing:0.06em;text-transform:uppercase}
+
+  #banner{border:1px solid var(--line);border-radius:10px;
+          padding:22px 16px;text-align:center;background:var(--surface);
+          margin-bottom:14px}
+  #banner.alert{background:var(--accent);color:#16273B}
+  #fc{font-size:1.9rem;letter-spacing:0.03em}
+  #sub{font-size:0.8rem;margin-top:6px;opacity:0.75}
+
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+  .card{background:var(--surface);border:1px solid var(--line);
+        border-radius:10px;padding:14px;text-align:center}
+  .card .v{font-size:1.6rem}
+  .card .l{font-size:0.68rem;color:var(--muted);letter-spacing:0.08em;
+           text-transform:uppercase;margin-top:4px}
+
+  #altbox{background:var(--surface);border:1px solid var(--line);
+          border-radius:10px;padding:14px}
+  #altbox h2{font-size:0.8rem;letter-spacing:0.08em;text-transform:uppercase;
+             color:var(--accent);font-weight:normal;margin-bottom:8px}
+  #altbox p{font-size:0.8rem;color:var(--muted);margin-bottom:10px}
+  select,input,button{font-family:inherit;font-size:1rem;color:var(--text);
+    background:#16273B;border:1px solid var(--line);border-radius:8px;
+    padding:10px;width:100%;margin-bottom:8px}
+  input::placeholder{color:var(--muted)}
+  button{background:var(--accent);color:#16273B;border:none;font-weight:bold;
+         cursor:pointer}
+  button:active{opacity:0.85}
+  #custom{display:none}
+  #savemsg{font-size:0.8rem;color:var(--accent);min-height:1.2em;
+           text-align:center}
+</style>
+</head>
+<body>
+
+<header>
+  <a href="index.html">&larr; Beacon</a>
+  <h1>Weather</h1>
+  <span id="node">connecting…</span>
+</header>
+
+<div id="banner">
+  <div id="fc">—</div>
+  <div id="sub">12-hour outlook from local pressure trends</div>
+</div>
+
+<div class="grid">
+  <div class="card"><div class="v" id="temp">—</div><div class="l">Temperature</div></div>
+  <div class="card"><div class="v" id="hum">—</div><div class="l">Humidity</div></div>
+  <div class="card"><div class="v" id="pres">—</div><div class="l">Pressure</div></div>
+  <div class="card"><div class="v" id="trend">—</div><div class="l">3-hr Trend</div></div>
+</div>
+
+<div id="altbox">
+  <h2>Station Altitude</h2>
+  <p>Forecast accuracy depends on this. Current setting:
+     <span id="curalt">—</span>. Pick the closest, or enter yours
+     (find it on any topo map or phone compass app).</p>
+  <select id="altsel">
+    <option value="595" selected>Guntersville, AL — 595 ft</option>
+    <option value="0">Coastal / Sea level — 0 ft</option>
+    <option value="33">New York, NY — 33 ft</option>
+    <option value="80">Houston, TX — 80 ft</option>
+    <option value="430">Dallas, TX — 430 ft</option>
+    <option value="910">Kansas City, MO — 910 ft</option>
+    <option value="1050">Atlanta, GA — 1,050 ft</option>
+    <option value="1086">Phoenix, AZ — 1,086 ft</option>
+    <option value="4226">Salt Lake City, UT — 4,226 ft</option>
+    <option value="5280">Denver, CO — 5,280 ft</option>
+    <option value="custom">Other — enter feet…</option>
+  </select>
+  <input id="custom" type="number" placeholder="Elevation in feet" min="0" max="14000">
+  <button id="save">Save Altitude</button>
+  <div id="savemsg"></div>
+</div>
+
+<script>
+  var sel = document.getElementById('altsel');
+  var custom = document.getElementById('custom');
+  sel.onchange = function () {
+    custom.style.display = (sel.value === 'custom') ? 'block' : 'none';
+  };
+
+  function poll() {
+    fetch('/api/status')
+      .then(function (r) { return r.json(); })
+      .then(function (j) {
+        var online = j.nodes && j.nodes.status;
+        document.getElementById('node').textContent =
+          online ? 'station online' : 'station offline';
+        var e = j.env;
+        if (!e) return;
+
+        var sev = e.sev || 0;
+        var banner = document.getElementById('banner');
+        banner.className = (sev >= 3) ? 'alert' : '';
+        document.getElementById('fc').textContent = e.fc || '—';
+
+        if (typeof e.tf === 'number')
+          document.getElementById('temp').textContent = e.tf.toFixed(1) + '°F';
+        document.getElementById('hum').textContent =
+          (typeof e.rh === 'number' && e.rh >= 0) ? e.rh.toFixed(0) + '%' : '--';
+        if (typeof e.inhg === 'number')
+          document.getElementById('pres').textContent = e.inhg.toFixed(2) + ' in';
+        if (typeof e.t3h === 'number') {
+          var t = e.t3h;
+          var arrow = t >= 1.6 ? '▲ ' : (t <= -1.6 ? '▼ ' : '— ');
+          document.getElementById('trend').textContent =
+            arrow + (t > 0 ? '+' : '') + t.toFixed(1);
+        }
+        if (typeof e.alt === 'number')
+          document.getElementById('curalt').textContent =
+            Math.round(e.alt * 3.281) + ' ft (' + Math.round(e.alt) + ' m)';
+      })
+      .catch(function () {
+        document.getElementById('node').textContent = 'reconnecting…';
+      });
+  }
+  poll();
+  setInterval(poll, 5000);
+
+  document.getElementById('save').onclick = function () {
+    var feet = (sel.value === 'custom')
+      ? parseFloat(custom.value) : parseFloat(sel.value);
+    var msg = document.getElementById('savemsg');
+    if (isNaN(feet) || feet < 0 || feet > 14000) {
+      msg.textContent = 'Enter a valid elevation (0–14,000 ft).';
+      return;
+    }
+    var meters = Math.round(feet * 0.3048);
+    fetch('/api/altitude', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ m: meters })
+    }).then(function (r) {
+      msg.textContent = r.ok
+        ? 'Sent — the station updates within a few seconds.'
+        : 'Failed to send. Is the station online?';
+      setTimeout(poll, 4000);
+    }).catch(function () {
+      msg.textContent = 'Failed to send.';
+    });
+  };
+</script>
+
+</body>
+</html>

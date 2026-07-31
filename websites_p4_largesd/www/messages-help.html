@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Messages Help — Beacon</title>
+<style>
+  :root {
+    --bg:#16273B; --surface:#1E3048; --line:rgba(237,232,218,0.14);
+    --text:#EDE8DA; --muted:rgba(237,232,218,0.55); --accent:#C99A3B;
+  }
+  *{box-sizing:border-box;margin:0}
+  body{background:var(--bg);color:var(--text);font-family:Georgia,serif;
+       max-width:640px;margin:0 auto;padding:16px;line-height:1.55}
+  header{display:flex;align-items:baseline;gap:14px;padding:4px 4px 18px}
+  header a{color:var(--accent);text-decoration:none;font-size:0.9rem}
+  h1{font-size:1.3rem;font-weight:normal}
+  h2{font-size:0.85rem;font-weight:normal;color:var(--accent);
+     letter-spacing:0.1em;text-transform:uppercase;margin:26px 0 8px}
+  p{font-size:0.95rem;margin-bottom:10px}
+  .card{background:var(--surface);border:1px solid var(--line);
+        border-radius:10px;padding:14px 16px;margin-bottom:6px}
+  .muted{color:var(--muted);font-size:0.85rem}
+  code{font-family:monospace;background:rgba(0,0,0,0.25);
+       padding:1px 6px;border-radius:4px;font-size:0.9em}
+  ul{padding-left:20px;font-size:0.95rem}
+  li{margin-bottom:8px}
+  details{background:var(--surface);border:1px solid var(--line);
+          border-radius:10px;padding:12px 16px;margin-top:26px}
+  summary{cursor:pointer;color:var(--accent);font-size:0.9rem;
+          letter-spacing:0.06em}
+  details p, details ul{margin-top:10px}
+  .pill{display:inline-block;font-size:0.68rem;letter-spacing:0.06em;
+        text-transform:uppercase;padding:2px 9px;border-radius:10px;
+        border:1px solid var(--line);color:var(--muted)}
+  .pill.on{color:var(--bg);background:var(--accent);border-color:var(--accent)}
+</style>
+</head>
+<body>
+
+<header>
+  <a href="messages.html">&larr; Messages</a>
+  <h1>How Messages Works</h1>
+</header>
+
+<div class="card">
+<p>Messages travel by <b>radio</b>, not the internet — they hop from one
+Beacon radio to the next until they arrive. No cell service, no WiFi
+from the outside world, nothing else needed. If the power and internet
+are out, this still works.</p>
+</div>
+
+<h2>Send to everyone</h2>
+<p>Leave the <b>"To"</b> box empty, type your message, press send.
+Every Beacon radio in range hears it — like speaking on a shared
+walkie-talkie channel.</p>
+
+<h2>Send to one person</h2>
+<p>Every Beacon radio has an ID — 8 letters and numbers, like
+<code>a3f91c02</code>. Put that in the <b>"To"</b> box and only that
+person's Beacon shows the message.</p>
+<ul>
+  <li><b>Easiest way:</b> when someone messages you, <b>tap their name</b>
+      above their message — the "To" box fills in by itself. Reply and go.</li>
+  <li>The page remembers the last person you wrote to.</li>
+  <li><b>Worth doing now, not during an emergency:</b> keep a short paper
+      list of your family's Beacon IDs taped near the device. Paper
+      doesn't run out of battery.</li>
+</ul>
+
+<h2>What the bubbles mean</h2>
+<ul>
+  <li>Bubbles on the <b>right</b> — things you sent.</li>
+  <li>Bubbles on the <b>left</b> — things you received. The small name
+      above shows who sent it.</li>
+  <li>Dashed bubbles in the <b>center</b> — notices from the radio
+      itself (for example, if a message couldn't be transmitted).</li>
+</ul>
+
+<h2>The radio badge</h2>
+<p>Top-right of the Messages page:
+<span class="pill on">radio online</span> means the radio is powered and
+talking to Beacon. <span class="pill">radio offline</span> means it
+isn't — check that the radio box has power before trusting any message
+to go out.</p>
+
+<h2>Test it anytime</h2>
+<p>Type <code>/echo hello</code> and send it. Within a few seconds a
+reply comes back from your own radio. That one test proves the whole
+path works — page, Beacon, radio, and back. Good habit: run it once in
+a while on a calm day, so you're not discovering a problem on a bad one.</p>
+
+<h2>Honest limits — please read once</h2>
+<ul>
+  <li><b>No delivery receipts.</b> Sending is like calling out on a
+      radio — you don't get confirmation it was heard. For anything
+      important, ask for a reply, and resend if none comes.</li>
+  <li><b>Not private.</b> Messages are broadcast over open radio.
+      Anyone with similar equipment could listen. Treat every message
+      like a postcard: fine for "we're safe, meet at the church,"
+      wrong for passwords or anything secret.</li>
+  <li><b>Range depends on terrain.</b> Across a neighborhood is
+      realistic; through a mountain is not. More Beacon radios between
+      two points = more hops = more reach.</li>
+</ul>
+
+<details>
+<summary>For the person who maintains this device</summary>
+<p><b>Finding a radio's ID:</b> it prints on the USB serial monitor
+when the radio board boots (<code>Node ID: xxxxxxxx</code>). Write it
+on the device with a label maker or tape.</p>
+<p><b>What <code>/echo</code> actually tests:</b> the message travels
+web page → Beacon hub → UART → radio board → its stored inbox → back
+up the same chain. Everything except the antenna itself. Testing true
+over-the-air delivery requires a second radio node.</p>
+<p><b>If the badge says offline:</b> the radio board isn't
+heartbeating. Check its power and the UART wiring to the hub, in that
+order.</p>
+<p><b>If sends produce a dashed "TX failed" notice:</b> the radio chip
+rejected the transmission — usually antenna or SPI wiring. The code
+number in the notice narrows it down.</p>
+</details>
+
+</body>
+</html>

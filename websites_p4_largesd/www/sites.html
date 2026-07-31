@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="dark">
+<title>Sites — Beacon</title>
+<style>
+  /* Same design tokens as index.html, kept in sync by hand for now.
+     Once there are several pages like this one, it's worth pulling
+     these shared tokens into one style.css that every page links to
+     instead of repeating them — flagging that as a later cleanup,
+     not doing it now. */
+  :root {
+    --bg: #16273B;
+    --surface: #1E344A;
+    --surface-hover: #24405A;
+    --line: #2E4560;
+    --accent: #C99A3B;
+    --accent-bright: #E0B658;
+    --text: #EDE8DA;
+    --text-muted: #93A4B3;
+
+    --font-display: Georgia, 'Iowan Old Style', 'Palatino Linotype', 'Book Antiqua', serif;
+    --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --font-mono: 'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+
+    --space-1: 0.5rem;
+    --space-2: 1rem;
+    --space-3: 1.5rem;
+    --space-4: 2.5rem;
+
+    --radius: 10px;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    min-height: 100%;
+  }
+
+  body {
+    background-color: var(--bg);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240' viewBox='0 0 240 240'%3E%3Cg fill='none' stroke='%23C99A3B' stroke-opacity='0.07' stroke-width='1'%3E%3Cpath d='M-20,40 Q40,10 100,40 T220,40 T340,40'/%3E%3Cpath d='M-20,95 Q40,65 100,95 T220,95 T340,95'/%3E%3Cpath d='M-20,150 Q40,122 100,150 T220,150 T340,150'/%3E%3Cpath d='M-20,205 Q40,180 100,205 T220,205 T340,205'/%3E%3C/g%3E%3C/svg%3E");
+    background-repeat: repeat;
+    color: var(--text);
+    font-family: var(--font-body);
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+
+  .page {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: var(--space-4) var(--space-2) var(--space-3);
+  }
+
+  .home-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    text-decoration: none;
+    margin-bottom: var(--space-3);
+  }
+
+  .home-link:hover,
+  .home-link:focus-visible {
+    color: var(--accent);
+  }
+
+  h1 {
+    font-family: var(--font-display);
+    font-size: clamp(1.9rem, 6vw, 2.6rem);
+    margin: 0 0 0.5rem;
+  }
+
+  .page-desc {
+    color: var(--text-muted);
+    margin: 0 0 var(--space-4);
+  }
+
+  /* ---------- Site list ---------- */
+
+  .category-label {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: var(--space-3) 0 0.5rem;
+  }
+
+  .category-label:first-child {
+    margin-top: 0;
+  }
+
+  .site-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .site-card {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    text-decoration: none;
+    color: var(--text);
+    transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+  }
+
+  .site-card:hover,
+  .site-card:focus-visible {
+    background: var(--surface-hover);
+    border-color: var(--accent);
+    transform: translateY(-2px);
+  }
+
+  .site-card svg {
+    flex-shrink: 0;
+    width: 30px;
+    height: 30px;
+    color: var(--accent);
+  }
+
+  .site-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .site-name {
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    font-weight: 700;
+  }
+
+  .site-desc {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-top: 0.15rem;
+  }
+
+  .site-meta {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+
+  /* Corner tick-marks, same motif as the homepage */
+  .tick-frame::before,
+  .tick-frame::after {
+    content: "";
+    position: absolute;
+    width: 9px;
+    height: 9px;
+    opacity: 0.45;
+    transition: opacity 0.15s ease;
+    pointer-events: none;
+  }
+
+  .tick-frame::before {
+    top: 5px;
+    left: 5px;
+    border-top: 1.5px solid var(--accent);
+    border-left: 1.5px solid var(--accent);
+  }
+
+  .tick-frame::after {
+    bottom: 5px;
+    right: 5px;
+    border-bottom: 1.5px solid var(--accent);
+    border-right: 1.5px solid var(--accent);
+  }
+
+  .tick-frame:hover::before,
+  .tick-frame:hover::after,
+  .tick-frame:focus-within::before,
+  .tick-frame:focus-within::after {
+    opacity: 1;
+  }
+
+  footer {
+    text-align: center;
+    padding: var(--space-3) var(--space-2);
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  a:focus-visible {
+    outline: 2px solid var(--accent-bright);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+
+  @media (max-width: 480px) {
+    .site-card {
+      align-items: flex-start;
+    }
+    .site-meta {
+      display: none;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <a class="home-link" href="index.html">&larr; Beacon</a>
+
+  <h1>Sites</h1>
+  <p class="page-desc">The offline online matrix.</p>
+
+  <!-- ================= SITE LIST =================
+       Each entry below is one ZIM file. To add another site you've
+       mirrored with zimit, copy an entire <a class="site-card"> block
+       and update the href, name, description, and size.
+
+       Routing: hrefs use the exact ZIM filename (minus .zim) as the
+       URL path — /infoweb/<exact-filename>/ — so the P4's ZIM-serving
+       endpoint (not yet built) can map a URL straight to a file on
+       disk with no separate lookup table to maintain. Rename these
+       only if the firmware ends up routing differently.
+
+       Sizes marked "—" aren't confirmed — pull real numbers straight
+       off your card once loaded, e.g.: ls -lh /path/to/infoweb/*.zim
+       That's more accurate than any published catalog figure, since
+       it reflects your actual downloaded files. -->
+  <div class="site-list">
+
+    <div class="category-label">General Reference</div>
+    <a class="site-card tick-frame" href="/infoweb/wikipedia_en_all_maxi_2026-02/">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="9"/>
+        <path d="M3 12h18"/>
+        <path d="M12 3c2.5 2.5 4 5.5 4 9s-1.5 6.5-4 9c-2.5-2.5-4-5.5-4-9s1.5-6.5 4-9z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">Wikipedia (English)</div>
+        <div class="site-desc">Full articles with images, offline</div>
+      </div>
+      <div class="site-meta"></div>
+    </a>
+
+    <div class="category-label">Medicine &amp; Health</div>
+    <a class="site-card tick-frame" href="/infoweb/wikipedia_en_medicine_maxi_2026-04/">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="9"/>
+        <path d="M3 12h18"/>
+        <path d="M12 3c2.5 2.5 4 5.5 4 9s-1.5 6.5-4 9c-2.5-2.5-4-5.5-4-9s1.5-6.5 4-9z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">Wikipedia — Medicine</div>
+        <div class="site-desc">Medical &amp; health encyclopedia articles, with images</div>
+      </div>
+      <div class="site-meta"></div>
+    </a>
+
+    <a class="site-card tick-frame" href="/infoweb/medlineplus.gov_en_all_2025-01/">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="9"/>
+        <path d="M3 12h18"/>
+        <path d="M12 3c2.5 2.5 4 5.5 4 9s-1.5 6.5-4 9c-2.5-2.5-4-5.5-4-9s1.5-6.5 4-9z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">MedlinePlus</div>
+        <div class="site-desc">Consumer health info from the National Library of Medicine — conditions, symptoms, medications</div>
+      </div>
+      <div class="site-meta"></div>
+    </a>
+
+    <a class="site-card tick-frame" href="/infoweb/irp.fas.org_en_military-medicine_2026-05/">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="9"/>
+        <path d="M3 12h18"/>
+        <path d="M12 3c2.5 2.5 4 5.5 4 9s-1.5 6.5-4 9c-2.5-2.5-4-5.5-4-9s1.5-6.5 4-9z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">Military Medicine</div>
+        <div class="site-desc">Field &amp; combat medicine reference, via the Federation of American Scientists</div>
+      </div>
+      <div class="site-meta"></div>
+    </a>
+
+    <a class="site-card tick-frame" href="/infoweb/gutenberg_en_lcc-r_2026-03/">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">Gutenberg — Medicine</div>
+        <div class="site-desc">Public-domain medical texts and books</div>
+      </div>
+      <div class="site-meta"></div>
+    </a>
+
+    <div class="category-label">Repair &amp; Technical</div>
+    <a class="site-card tick-frame" href="/infoweb/ifixit_en_all_2025-12/">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="9"/>
+        <path d="M3 12h18"/>
+        <path d="M12 3c2.5 2.5 4 5.5 4 9s-1.5 6.5-4 9c-2.5-2.5-4-5.5-4-9s1.5-6.5 4-9z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">iFixit</div>
+        <div class="site-desc">Step-by-step repair guides &amp; teardowns — electronics, appliances, vehicles</div>
+      </div>
+      <div class="site-meta"></div>
+    </a>
+
+    <a class="site-card tick-frame" href="/infoweb/gutenberg_en_lcc-t_2026-03/">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">Gutenberg — Technology</div>
+        <div class="site-desc">Public-domain engineering &amp; technical books</div>
+      </div>
+      <div class="site-meta"></div>
+    </a>
+
+    <div class="category-label">Science</div>
+    <a class="site-card tick-frame" href="/infoweb/gutenberg_en_lcc-q_2026-03/">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">Gutenberg — Science</div>
+        <div class="site-desc">Public-domain science texts</div>
+      </div>
+      <div class="site-meta"></div>
+    </a>
+
+    <div class="category-label">Law</div>
+    <a class="site-card tick-frame" href="/infoweb/gutenberg_en_lcc-k_2026-03/">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">Gutenberg — Law</div>
+        <div class="site-desc">Public-domain legal texts &amp; references</div>
+      </div>
+      <div class="site-meta"></div>
+    </a>
+
+    <div class="category-label">Education</div>
+    <a class="site-card tick-frame" href="/infoweb/gutenberg_en_lcc-l_2026-03/">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">Gutenberg — Education</div>
+        <div class="site-desc">Public-domain books on teaching &amp; education</div>
+      </div>
+      <div class="site-meta"></div>
+    </a>
+
+    <div class="category-label">Agriculture</div>
+    <a class="site-card tick-frame" href="/infoweb/gutenberg_en_lcc-s_2026-03/">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">Gutenberg — Agriculture</div>
+        <div class="site-desc">Public-domain farming &amp; agriculture books</div>
+      </div>
+      <div class="site-meta"></div>
+    </a>
+
+    <!--
+    <a class="site-card tick-frame" href="/infoweb/<exact-filename>/">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="9"/>
+        <path d="M3 12h18"/>
+        <path d="M12 3c2.5 2.5 4 5.5 4 9s-1.5 6.5-4 9c-2.5-2.5-4-5.5-4-9s1.5-6.5 4-9z"/>
+      </svg>
+      <div class="site-info">
+        <div class="site-name">Site name</div>
+        <div class="site-desc">One-line description</div>
+      </div>
+      <div class="site-meta">Size</div>
+    </a>
+    -->
+
+  </div>
+
+</div>
+
+<footer>
+  Beacon 
+</footer>
+
+</body>
+</html>

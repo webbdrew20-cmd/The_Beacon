@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="dark">
+<title>Beacon — Offline Library</title>
+<style>
+  /* ==============================================================
+     BEACON — design tokens
+     To rename the site, edit the <h1 class="wordmark"> text below.
+     Everything on this page is self-contained on purpose: no font
+     imports, no CDN scripts, no external images. The device this
+     runs on has no internet gateway, so anything fetched from
+     outside will simply fail to load on real hardware even though
+     it may work fine in a normal browser preview.
+     ============================================================== */
+  :root {
+    --bg: #16273B;
+    --surface: #1E344A;
+    --surface-hover: #24405A;
+    --line: #2E4560;
+    --accent: #C99A3B;
+    --accent-bright: #E0B658;
+    --text: #EDE8DA;
+    --text-muted: #93A4B3;
+
+    --font-display: Georgia, 'Iowan Old Style', 'Palatino Linotype', 'Book Antiqua', serif;
+    --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --font-mono: 'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+
+    --space-1: 0.5rem;
+    --space-2: 1rem;
+    --space-3: 1.5rem;
+    --space-4: 2.5rem;
+    --space-5: 4rem;
+
+    --radius: 10px;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    min-height: 100%;
+  }
+
+  body {
+    background-color: var(--bg);
+    /* Subtle contour-line texture, inlined as an SVG data URI so it
+       needs no separate image file on the SD card. */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240' viewBox='0 0 240 240'%3E%3Cg fill='none' stroke='%23C99A3B' stroke-opacity='0.07' stroke-width='1'%3E%3Cpath d='M-20,40 Q40,10 100,40 T220,40 T340,40'/%3E%3Cpath d='M-20,95 Q40,65 100,95 T220,95 T340,95'/%3E%3Cpath d='M-20,150 Q40,122 100,150 T220,150 T340,150'/%3E%3Cpath d='M-20,205 Q40,180 100,205 T220,205 T340,205'/%3E%3C/g%3E%3C/svg%3E");
+    background-repeat: repeat;
+    color: var(--text);
+    font-family: var(--font-body);
+    line-height: 1.5;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+
+  main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-4) var(--space-2);
+  }
+
+  /* ---------- Hero ---------- */
+
+  .hero {
+    text-align: center;
+    max-width: 640px;
+    width: 100%;
+    margin-bottom: var(--space-5);
+  }
+
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 var(--space-2);
+  }
+
+  .wordmark {
+    font-family: var(--font-display);
+    font-size: clamp(2.75rem, 8vw, 4.5rem);
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    margin: 0 0 var(--space-2);
+    color: var(--text);
+  }
+
+  .tagline {
+    font-size: 1.05rem;
+    color: var(--text-muted);
+    margin: 0 0 var(--space-4);
+  }
+
+  /* ---------- Search ---------- */
+
+  .search-form {
+    display: flex;
+    align-items: stretch;
+    gap: var(--space-1);
+    max-width: 560px;
+    width: 100%;
+    margin: 0 auto;
+  }
+
+  .search-field {
+    position: relative;
+    flex: 1;
+    display: flex;
+    align-items: center;
+  }
+
+  .search-field svg {
+    position: absolute;
+    left: 16px;
+    width: 19px;
+    height: 19px;
+    color: var(--text-muted);
+    pointer-events: none;
+  }
+
+  .search-field input {
+    width: 100%;
+    padding: 0.9rem 1rem 0.9rem 3rem;
+    font-size: 1.05rem;
+    font-family: var(--font-body);
+    color: var(--text);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    outline: none;
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+
+  .search-field input::placeholder {
+    color: var(--text-muted);
+  }
+
+  .search-field input:focus {
+    border-color: var(--accent);
+    background: var(--surface-hover);
+  }
+
+  .search-form button {
+    padding: 0 1.6rem;
+    font-size: 1rem;
+    font-weight: 600;
+    font-family: var(--font-body);
+    color: var(--bg);
+    background: var(--accent);
+    border: none;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: background 0.15s ease;
+    white-space: nowrap;
+  }
+
+  .search-form button:hover,
+  .search-form button:focus-visible {
+    background: var(--accent-bright);
+  }
+
+  /* ---------- Corner tick-mark signature ----------
+     Small registration marks, like the neatline corners on a
+     topographic chart. This is the one recurring visual motif
+     used throughout the page. */
+
+  .tick-frame {
+    position: relative;
+  }
+
+  .tick-frame::before,
+  .tick-frame::after {
+    content: "";
+    position: absolute;
+    width: 9px;
+    height: 9px;
+    opacity: 0.45;
+    transition: opacity 0.15s ease;
+    pointer-events: none;
+  }
+
+  .tick-frame::before {
+    top: 5px;
+    left: 5px;
+    border-top: 1.5px solid var(--accent);
+    border-left: 1.5px solid var(--accent);
+  }
+
+  .tick-frame::after {
+    bottom: 5px;
+    right: 5px;
+    border-bottom: 1.5px solid var(--accent);
+    border-right: 1.5px solid var(--accent);
+  }
+
+  .tick-frame:hover::before,
+  .tick-frame:hover::after,
+  .tick-frame:focus-within::before,
+  .tick-frame:focus-within::after {
+    opacity: 1;
+  }
+
+  /* ---------- Tiles ---------- */
+
+  .tiles {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: var(--space-2);
+    max-width: 640px;
+    width: 100%;
+  }
+
+  .tile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.6rem;
+    padding: var(--space-3) var(--space-1);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    text-decoration: none;
+    color: var(--text);
+    transition: background 0.15s ease, transform 0.15s ease, border-color 0.15s ease;
+  }
+
+  .tile:hover,
+  .tile:focus-visible {
+    background: var(--surface-hover);
+    border-color: var(--accent);
+    transform: translateY(-2px);
+  }
+
+  .tile svg {
+    width: 28px;
+    height: 28px;
+    color: var(--accent);
+  }
+
+  .tile .tile-label {
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    font-weight: 700;
+  }
+
+  .tile .tile-desc {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    line-height: 1.35;
+  }
+
+  /* ---------- Corner icons (Games, Music) ---------- */
+
+  .corner-icon {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    color: var(--accent);
+    text-decoration: none;
+    transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+  }
+
+  .corner-icon.music {
+    right: 76px;
+  }
+
+  .corner-icon:hover,
+  .corner-icon:focus-visible {
+    background: var(--surface-hover);
+    border-color: var(--accent);
+    transform: translateY(-1px);
+  }
+
+  .corner-icon svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  /* ---------- Footer ---------- */
+
+  footer {
+    text-align: center;
+    padding: var(--space-3) var(--space-2);
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  /* ---------- Accessibility ---------- */
+
+  a:focus-visible,
+  button:focus-visible,
+  input:focus-visible {
+    outline: 2px solid var(--accent-bright);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      transition: none !important;
+    }
+  }
+
+  @media (max-width: 420px) {
+    .search-form {
+      flex-direction: column;
+    }
+    .search-form button {
+      padding: 0.85rem;
+    }
+  }
+</style>
+</head>
+<body>
+
+<a class="corner-icon" href="http://192.168.4.200/games/" aria-label="Games">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <rect x="2.5" y="8" width="19" height="10" rx="5"/>
+    <line x1="7" y1="11" x2="7" y2="15"/>
+    <line x1="5" y1="13" x2="9" y2="13"/>
+    <circle cx="16" cy="11.5" r="1"/>
+    <circle cx="18.5" cy="14" r="1"/>
+  </svg>
+</a>
+
+<a class="corner-icon music" href="http://192.168.4.200/music/" aria-label="Music">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M9 18V6.5L20 4.5V16"/>
+    <circle cx="6.5" cy="18" r="2.5"/>
+    <circle cx="17.5" cy="16" r="2.5"/>
+  </svg>
+</a>
+
+<main>
+
+  <!-- ================= HERO ================= -->
+  <section class="hero">
+    <p class="eyebrow">Offline Library &amp; Reference System</p>
+    <h1 class="wordmark">Beacon</h1>
+    <p class="tagline">Everything you need. When nothing else works.</p>
+
+    <!-- Submits as a plain GET to /search?q=... — implement the
+         FTS5 search endpoint on the P4 to make this live. This
+         form works with or without JavaScript, by design. -->
+    <form class="search-form tick-frame" action="/search" method="GET">
+      <div class="search-field">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="10.5" cy="10.5" r="6.5"/>
+          <line x1="15.5" y1="15.5" x2="21" y2="21"/>
+        </svg>
+        <input type="text" name="q" placeholder="Search Wikipedia & reference sites…" autocomplete="off" autofocus>
+      </div>
+      <button type="submit">Search</button>
+    </form>
+  </section>
+
+  <!-- ================= TILES ================= -->
+  <!-- Sites, Library, Messages and Weather are served by this board
+       (the P4) as relative links, so they resolve no matter what IP
+       the P4 ends up with — though Messages' and Weather's actual
+       data is relayed from the LoRa mini / Status mini over UART,
+       the P4 just hosts the pages themselves. Music and Games live
+       on the entertainment board (S3-WROOM-2) and are the two corner
+       icons above — swap out 192.168.4.200 for whatever you assign
+       it if that address ever changes. -->
+  <nav class="tiles" aria-label="Sections">
+
+    <a class="tile tick-frame" href="sites.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="9"/>
+        <path d="M3 12h18"/>
+        <path d="M12 3c2.5 2.5 4 5.5 4 9s-1.5 6.5-4 9c-2.5-2.5-4-5.5-4-9s1.5-6.5 4-9z"/>
+      </svg>
+      <span class="tile-label">Sites</span>
+      <span class="tile-desc">Browse Wikipedia &amp; reference sites</span>
+    </a>
+
+    <a class="tile tick-frame" href="books.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5C4 4.5 6 3.5 9 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 9 18.5C6 18.5 4 19.5 4 19.5V4.5Z"/>
+        <path d="M20 4.5C20 4.5 18 3.5 15 3.5C12 3.5 12 4.5 12 4.5V19.5C12 19.5 12 18.5 15 18.5C18 18.5 20 19.5 20 19.5V4.5Z"/>
+      </svg>
+      <span class="tile-label">Library</span>
+      <span class="tile-desc">Reference, manuals &amp; guides</span>
+    </a>
+
+    <a class="tile tick-frame" href="messages.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M3 5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H9l-5 4v-4H5a2 2 0 0 1-2-2V5z"/>
+      </svg>
+      <span class="tile-label">Messages</span>
+      <span class="tile-desc">Send messages, Mesh</span>
+    </a>
+
+    <a class="tile tick-frame" href="weather.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="7" cy="7" r="3"/>
+        <path d="M7 1.5v1.5M7 11v1.5M1.5 7H3M11 7h1.5M3.1 3.1l1 1M9.9 9.9l1 1M3.1 10.9l1-1"/>
+        <path d="M11 18.5a4 4 0 0 1 .6-7.95A5 5 0 0 1 21.3 12a3.5 3.5 0 0 1-.8 6.5H11z"/>
+      </svg>
+      <span class="tile-label">Weather</span>
+      <span class="tile-desc">Local forecast &amp; conditions</span>
+    </a>
+
+  </nav>
+
+</main>
+
+<footer>
+  Beacon · Offline Network · Your peace of mind
+</footer>
+
+</body>
+</html>
