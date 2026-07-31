@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Play — Beacon</title>
+<style>
+  body{margin:0;background:#0d1826;color:#EDE8DA;font-family:Georgia,serif}
+  #topbar{padding:10px 14px}
+  #topbar a{color:#C99A3B;text-decoration:none;font-size:0.9rem}
+  #game{width:100%;height:calc(100vh - 44px)}
+  #err{padding:30px 20px;text-align:center;color:rgba(237,232,218,0.6)}
+</style>
+</head>
+<body>
+
+<div id="topbar"><a href="/games/">&larr; Games</a></div>
+<div id="game"></div>
+
+<script>
+  // EmulatorJS runs entirely in this phone's browser — this board just
+  // serves the files. Requires the self-hosted EmulatorJS bundle at
+  // /games/ejs/data/ on the SD card (see README).
+  var rom = new URLSearchParams(location.search).get('rom');
+  if (!rom) {
+    document.getElementById('game').innerHTML =
+      '<div id="err">No game selected.</div>';
+  } else {
+    var ext = rom.split('.').pop().toLowerCase();
+    var core = (ext === 'nes') ? 'nes' : 'gb';   // gb covers .gb and .gbc
+
+    window.EJS_player = '#game';
+    window.EJS_core = core;
+    window.EJS_gameUrl = '/games/roms/' + encodeURIComponent(rom);
+    window.EJS_pathtodata = '/games/ejs/data/';
+    window.EJS_startOnLoaded = true;
+
+    var s = document.createElement('script');
+    s.src = '/games/ejs/data/loader.js';
+    s.onerror = function () {
+      document.getElementById('game').innerHTML =
+        '<div id="err">Emulator files not found on the SD card.<br>'
+        + 'Copy the EmulatorJS "data" folder to /games/ejs/data/ — '
+        + 'see the README.</div>';
+    };
+    document.body.appendChild(s);
+  }
+</script>
+
+</body>
+</html>

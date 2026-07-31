@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Games — Beacon</title>
+<style>
+  :root {
+    --bg:#16273B; --surface:#1E3048; --line:rgba(237,232,218,0.14);
+    --text:#EDE8DA; --muted:rgba(237,232,218,0.55); --accent:#C99A3B;
+  }
+  *{box-sizing:border-box;margin:0}
+  body{background:var(--bg);color:var(--text);font-family:Georgia,serif;
+       max-width:680px;margin:0 auto;padding:16px}
+  header{display:flex;align-items:baseline;gap:14px;padding:4px 4px 16px}
+  header a{color:var(--accent);text-decoration:none;font-size:0.9rem}
+  h1{font-size:1.3rem;font-weight:normal}
+  #grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px}
+  .game{display:flex;flex-direction:column;align-items:center;gap:8px;
+        padding:18px 10px;background:var(--surface);border:1px solid var(--line);
+        border-radius:10px;text-decoration:none;color:var(--text);text-align:center}
+  .game:active{border-color:var(--accent)}
+  .game .icon{font-size:1.7rem}
+  .game .title{font-size:0.92rem;line-height:1.3}
+  .game .sys{font-size:0.68rem;color:var(--muted);letter-spacing:0.08em;
+             text-transform:uppercase}
+  #empty{color:var(--muted);text-align:center;padding:40px 12px;font-size:0.9rem;
+         grid-column:1/-1}
+</style>
+</head>
+<body>
+
+<header>
+  <a href="http://192.168.4.1/">&larr; Beacon</a>
+  <h1>Games</h1>
+</header>
+
+<div id="grid"><div id="empty">Loading…</div></div>
+
+<script>
+  var grid = document.getElementById('grid');
+  function sysOf(file) {
+    var ext = file.split('.').pop().toLowerCase();
+    if (ext === 'gb') return 'Game Boy';
+    if (ext === 'gbc') return 'GB Color';
+    if (ext === 'nes') return 'NES';
+    return ext;
+  }
+  fetch('/games/list')
+    .then(function (r) { return r.json(); })
+    .then(function (list) {
+      grid.innerHTML = '';
+      if (!list.length) {
+        grid.innerHTML = '<div id="empty">No games found. Drop ROM files '
+          + '(.gb / .gbc / .nes) into /games/roms on this board\'s SD card '
+          + 'and reboot.</div>';
+        return;
+      }
+      list.forEach(function (g) {
+        var a = document.createElement('a');
+        a.className = 'game';
+        a.href = '/games/play.html?rom=' + encodeURIComponent(g.file);
+        a.innerHTML = '<div class="icon">&#127918;</div>'
+          + '<div class="title"></div><div class="sys"></div>';
+        a.querySelector('.title').textContent = g.name;
+        a.querySelector('.sys').textContent = sysOf(g.file);
+        grid.appendChild(a);
+      });
+    })
+    .catch(function () {
+      grid.innerHTML = '<div id="empty">Could not load the game list.</div>';
+    });
+</script>
+
+</body>
+</html>

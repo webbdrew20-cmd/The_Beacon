@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Music — Beacon</title>
+<style>
+  :root {
+    --bg:#16273B; --surface:#1E3048; --surface-hover:#24405A;
+    --line:rgba(237,232,218,0.14);
+    --text:#EDE8DA; --muted:rgba(237,232,218,0.55); --accent:#C99A3B;
+  }
+  *{box-sizing:border-box;margin:0}
+  body{background:var(--bg);color:var(--text);font-family:Georgia,serif;
+       max-width:640px;margin:0 auto;padding:16px}
+  header{display:flex;align-items:baseline;gap:14px;padding:4px 4px 14px}
+  header a{color:var(--accent);text-decoration:none;font-size:0.9rem}
+  h1{font-size:1.3rem;font-weight:normal}
+
+  /* ---------- Search ---------- */
+  .search-field{position:relative;margin-bottom:12px}
+  .search-field svg{position:absolute;left:13px;top:50%;transform:translateY(-50%);
+    width:16px;height:16px;color:var(--muted);pointer-events:none}
+  .search-field input{width:100%;padding:0.7rem 0.9rem 0.7rem 2.5rem;font-size:0.95rem;
+    font-family:inherit;color:var(--text);background:var(--surface);
+    border:1px solid var(--line);border-radius:8px;outline:none}
+  .search-field input:focus{border-color:var(--accent)}
+  .search-field input::placeholder{color:var(--muted)}
+
+  /* ---------- Song list — a bounded box, not the whole page ---------- */
+  #list{max-height:42vh;min-height:120px;overflow-y:auto;
+        border:1px solid var(--line);border-radius:8px;
+        background:rgba(0,0,0,0.12);margin-bottom:14px}
+  .song{padding:11px 14px;border-bottom:1px solid var(--line);cursor:pointer;
+        font-size:0.94rem;display:flex;align-items:center;gap:8px}
+  .song:last-child{border-bottom:none}
+  .song:active{background:var(--surface-hover)}
+  .song.playing{color:var(--accent)}
+  .song .bars{width:12px;flex-shrink:0;text-align:center;font-size:0.75rem}
+  #empty{color:var(--muted);text-align:center;padding:30px 12px;font-size:0.88rem}
+
+  /* ---------- Now playing card ---------- */
+  #player-card{background:var(--surface);border:1px solid var(--line);
+               border-radius:12px;padding:16px}
+  #now{font-size:1rem;text-align:center;min-height:1.3em;margin-bottom:10px;
+       white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #now.empty{color:var(--muted);font-size:0.85rem}
+
+  .scrub{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+  .scrub span{font-size:0.68rem;color:var(--muted);font-family:monospace;width:34px}
+  .scrub span:last-child{text-align:right}
+  #seek{flex:1;-webkit-appearance:none;appearance:none;height:4px;border-radius:2px;
+        background:var(--line);outline:none}
+  #seek::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;
+        border-radius:50%;background:var(--accent);cursor:pointer}
+  #seek::-moz-range-thumb{width:13px;height:13px;border:none;border-radius:50%;
+        background:var(--accent);cursor:pointer}
+
+  .controls{display:flex;align-items:center;justify-content:center;gap:18px}
+  .controls button{background:none;border:none;color:var(--text);cursor:pointer;
+        display:flex;align-items:center;justify-content:center;padding:6px}
+  .controls svg{width:22px;height:22px}
+  #shuffle{color:var(--muted);border-radius:50%;width:36px;height:36px}
+  #shuffle.on{color:var(--bg);background:var(--accent)}
+  #playpause{width:56px;height:56px;border-radius:50%;background:var(--accent);
+        color:var(--bg)}
+  #playpause svg{width:24px;height:24px}
+  #playpause:active,#shuffle:active,#prev:active,#next:active{opacity:0.8}
+</style>
+</head>
+<body>
+
+<header>
+  <a href="http://192.168.4.1/">&larr; Beacon</a>
+  <h1>Music</h1>
+</header>
+
+<div class="search-field">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <circle cx="10.5" cy="10.5" r="6.5"/>
+    <line x1="15.5" y1="15.5" x2="21" y2="21"/>
+  </svg>
+  <input id="search" type="text" placeholder="Search songs…" autocomplete="off">
+</div>
+
+<div id="list"><div id="empty">Loading…</div></div>
+
+<div id="player-card">
+  <div id="now" class="empty">Nothing playing</div>
+
+  <div class="scrub">
+    <span id="tcur">0:00</span>
+    <input id="seek" type="range" min="0" max="100" value="0">
+    <span id="tdur">0:00</span>
+  </div>
+
+  <div class="controls">
+    <button id="shuffle" aria-label="Shuffle">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 6h3.5c2 0 3 .7 4.2 2.3M3 18h3.5c2 0 3-.7 4.2-2.3M15 6h1.5c2.5 0 3.5 1 4.5 2.5M15 18h1.5c2.5 0 3.5-1 4.5-2.5"/>
+        <path d="M18 3.5 21 6l-3 2.5M18 20.5 21 18l-3-2.5"/>
+      </svg>
+    </button>
+    <button id="prev" aria-label="Previous">
+      <svg viewBox="0 0 24 24" fill="currentColor">
+        <path d="M6 5h2.2v14H6zM19 5 9 12l10 7z"/>
+      </svg>
+    </button>
+    <button id="playpause" aria-label="Play">
+      <svg id="ppIcon" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5l12 7-12 7z"/></svg>
+    </button>
+    <button id="next" aria-label="Next">
+      <svg viewBox="0 0 24 24" fill="currentColor">
+        <path d="M18 5h-2.2v14H18zM5 5l10 7-10 7z"/>
+      </svg>
+    </button>
+  </div>
+</div>
+
+<audio id="audio" preload="none"></audio>
+
+<script>
+  var library = [];          // every song, from /music/list — never filtered
+  var order = [];             // playback order (sequential or shuffled), indices into library
+  var pos = -1;                // position within `order`
+  var shuffleOn = false;
+  var seekDragging = false;
+
+  var audio = document.getElementById('audio');
+  var listEl = document.getElementById('list');
+  var searchEl = document.getElementById('search');
+  var nowEl = document.getElementById('now');
+  var ppIcon = document.getElementById('ppIcon');
+  var seek = document.getElementById('seek');
+  var tcur = document.getElementById('tcur');
+  var tdur = document.getElementById('tdur');
+
+  var PLAY_ICON = '<path d="M8 5l12 7-12 7z"/>';
+  var PAUSE_ICON = '<path d="M7 5h4v14H7zM13 5h4v14h-4z"/>';
+
+  function fmt(s) {
+    if (!isFinite(s) || s < 0) s = 0;
+    var m = Math.floor(s / 60), r = Math.floor(s % 60);
+    return m + ':' + (r < 10 ? '0' : '') + r;
+  }
+
+  function sequentialOrder() {
+    var o = [];
+    for (var i = 0; i < library.length; i++) o.push(i);
+    return o;
+  }
+
+  function shuffledOrder(keepFirst) {
+    var o = sequentialOrder();
+    for (var i = o.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = o[i]; o[i] = o[j]; o[j] = t;
+    }
+    if (keepFirst !== undefined) {
+      var idx = o.indexOf(keepFirst);
+      if (idx > 0) { var v = o.splice(idx, 1)[0]; o.unshift(v); }
+    }
+    return o;
+  }
+
+  function rebuildOrder() {
+    var curLibIdx = (pos >= 0 && pos < order.length) ? order[pos] : undefined;
+    order = shuffleOn ? shuffledOrder(curLibIdx) : sequentialOrder();
+    pos = (curLibIdx !== undefined) ? order.indexOf(curLibIdx) : -1;
+  }
+
+  // ---------- rendering (filtered view; playback queue is unaffected) ----------
+  function render() {
+    var term = searchEl.value.trim().toLowerCase();
+    listEl.innerHTML = '';
+
+    if (!library.length) {
+      listEl.innerHTML = '<div id="empty">No music found. Drop MP3 files '
+        + 'into the /music folder on this board\'s SD card and reboot.</div>';
+      return;
+    }
+
+    var shown = 0;
+    library.forEach(function (s, i) {
+      if (term && s.file.toLowerCase().indexOf(term) === -1 &&
+          s.name.toLowerCase().indexOf(term) === -1) return;
+      shown++;
+      var playing = (pos >= 0 && order[pos] === i);
+      var d = document.createElement('div');
+      d.className = 'song' + (playing ? ' playing' : '');
+      d.innerHTML = '<span class="bars">' + (playing ? '&#9654;' : '') + '</span><span></span>';
+      d.querySelector('span:last-child').textContent = s.name;
+      d.onclick = function () { playLibraryIndex(i); };
+      listEl.appendChild(d);
+    });
+
+    if (!shown) {
+      var msg = document.createElement('div');
+      msg.id = 'empty';
+      msg.textContent = 'No songs match "' + searchEl.value.trim() + '".';
+      listEl.appendChild(msg);
+    }
+  }
+
+  // ---------- playback ----------
+  function playLibraryIndex(libIdx) {
+    if (!order.length) rebuildOrder();
+    var at = order.indexOf(libIdx);
+    if (at === -1) { rebuildOrder(); at = order.indexOf(libIdx); }
+    pos = at;
+    loadAndPlay();
+  }
+
+  function loadAndPlay() {
+    if (pos < 0 || pos >= order.length) return;
+    var s = library[order[pos]];
+    audio.src = '/music/files/' + encodeURIComponent(s.file);
+    audio.play();
+    nowEl.textContent = s.name;
+    nowEl.classList.remove('empty');
+    render();
+  }
+
+  function playPause() {
+    if (!audio.src) {
+      if (!order.length) rebuildOrder();
+      if (order.length) { pos = 0; loadAndPlay(); }
+      return;
+    }
+    if (audio.paused) audio.play(); else audio.pause();
+  }
+
+  function step(delta) {
+    if (!order.length) rebuildOrder();
+    if (!order.length) return;
+    pos = pos < 0 ? 0 : (pos + delta + order.length) % order.length;
+    loadAndPlay();
+  }
+
+  audio.addEventListener('play', function () { ppIcon.innerHTML = PAUSE_ICON; });
+  audio.addEventListener('pause', function () { ppIcon.innerHTML = PLAY_ICON; });
+  audio.addEventListener('ended', function () { step(1); });   // continue through the library
+  audio.addEventListener('loadedmetadata', function () {
+    seek.max = Math.floor(audio.duration) || 0;
+    tdur.textContent = fmt(audio.duration);
+  });
+  audio.addEventListener('timeupdate', function () {
+    if (!seekDragging) seek.value = Math.floor(audio.currentTime);
+    tcur.textContent = fmt(audio.currentTime);
+  });
+
+  seek.addEventListener('input', function () { seekDragging = true; tcur.textContent = fmt(seek.value); });
+  seek.addEventListener('change', function () { audio.currentTime = seek.value; seekDragging = false; });
+
+  document.getElementById('playpause').onclick = playPause;
+  document.getElementById('prev').onclick = function () { step(-1); };
+  document.getElementById('next').onclick = function () { step(1); };
+  document.getElementById('shuffle').onclick = function () {
+    shuffleOn = !shuffleOn;
+    document.getElementById('shuffle').classList.toggle('on', shuffleOn);
+    rebuildOrder();
+    render();
+  };
+  searchEl.addEventListener('input', render);
+
+  fetch('/music/list')
+    .then(function (r) { return r.json(); })
+    .then(function (l) { library = l; rebuildOrder(); render(); })
+    .catch(function () {
+      listEl.innerHTML = '<div id="empty">Could not load the song list.</div>';
+    });
+</script>
+
+</body>
+</html>
