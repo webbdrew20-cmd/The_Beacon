@@ -269,26 +269,18 @@ p4/ (Storage Root)
 └── infoweb/                   # Self-contained offline websites (Kiwix extractions)
     └── [unpacked-site]/
         └── index.html
-To unpack `.zim` files on your computer, you need `zimdump` from the **zim-tools** package.
-
-* **Linux (Ubuntu/Debian):**
-  ```bash
-  sudo apt update
-  sudo apt install zim-tools
 
 
 
 
 
-# 📡 Beacon ESP32-S3 WROOM-2 — Media & Emulation Setup Guide
 
-This guide details the SD card directory layout, file dependencies, and deployment steps for hosting the Beacon music player and retro game emulator on the **ESP32-S3 WROOM-2**.
+
+
 
 ---
 
-## 📂 SD Card Directory Layout
 
-All primary folders must sit at the **root (`/`)** of your formatted FAT32 SD card:
 
 ```text
 s3wroom2/ (SD Card Root)
