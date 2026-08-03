@@ -192,3 +192,27 @@ The main processing node and entertainment node run on **ESP-IDF v5.5** to suppo
 1. **Navigate to the project directory:**
    ```cmd
    cd path\to\Project-Beacon\p4_beacon_project
+
+## 🖨️ 3D Printing & Post-Processing Guide
+
+Pre-configured printable model files for the Project Beacon enclosure, internal brackets, and mounting plates are provided in the repository as **`.3mf`** files.
+
+---
+
+### 🧵 Material & Support Recommendations
+
+* **Primary Chassis Filament:** **PA6 (Nylon 6)** is strongly recommended for its high heat deflection temperature, extreme impact strength, and rugged outdoor durability.
+* **Support Interface Filament:** **ABS** (or ABS-GF/CF).
+
+> 💡 **Pro-Tip (Dual-Material / AMS / MMU Printing):** 
+> When printing the main body in **PA6**, set **ABS as your Support Interface material**. PA6 and ABS do not bond chemically during extrusion. Using ABS for interface layers allows solid support structures to snap off effortlessly, leaving a clean, glass-smooth surface without scarring your print.
+
+---
+
+### 🛠️ Hardware Post-Processing & Hole Preparation
+
+Due to normal FDM thermal contraction and inner-wall extrusion squish, printed holes will be slightly tight straight off the build plate.
+
+1. **Drill Before Fastening:** Always chase/clean out every screw hole with a drill bit sized for your chosen thread diameter before driving fasteners or heat-set inserts.
+2. **Proper Thread Engagement:** Pre-drilling cleans up layer line ridges, prevents the printed walls from delaminating or splitting along layer boundaries, and ensures screw threads bite cleanly into solid plastic for a rigid, secure hold.
+   
