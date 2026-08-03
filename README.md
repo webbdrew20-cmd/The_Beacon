@@ -247,84 +247,28 @@ Due to normal FDM thermal contraction and inner-wall extrusion squish, printed h
 
 1. **Drill Before Fastening:** Always chase/clean out every screw hole with a drill bit sized for the bolts( around -.5mm of actual size).
 
-# 📡 Beacon Web Server — Directory Layout & Content Loading Guide
+# 📡 Beacon System — Storage Layouts & Content Setup Guide
 
-This guide details the root-level folder structure used to host static web interfaces, offline reference libraries, and media archives on the **Beacon** storage drive.
+This master repository guide details the root-level folder structures for both the **ESP32-P4** and **ESP32-S3 WROOM-2** hardware targets, along with step-by-step instructions for extracting Kiwix `.zim` archives for offline hosting.
 
 ---
 
-## 📂 Root Directory Layout for p4 sd card(+256 for best info)
+## 📂 1. ESP32-P4 Storage Layout (Library & Offline Web Focus)
 
-All primary directories sit at the **root (`/`)** of your storage drive (SD card or flash file system):
+For the ESP32-P4 target, all major content directories sit at the **root (`/`)** level of the storage drive alongside `www/`. Keeping path depths shallow reduces file system traversal overhead and improves file-serving performance.
 
 ```text
 / (Storage Root)
-├── www/                       # Main web application & UI framework
-│   ├── index.html             # Landing page
+├── www/                       # Core Web UI & Application Framework
+│   ├── index.html             # Primary landing page
 │   └── sites.html             # System navigation index
 ├── content/                   # Raw media archives, audio files, and downloads
-    ├── library/                   # Offline books, reference guides, and manuals
-    └── infoweb/                   # Self-contained offline websites and web apps
-       └── [unpacked-site]/
-
----       
-
-## 📡 Beacon ESP32-S3 — SD Card Directory Layout & Setup Guide
-
-
-
-This guide details the required SD card folder structure and media setup for running the Beacon web server, music player, and game emulator on the ESP32-S3 WROOM-2.
-
----
-
-## 📂 SD Card Directory Layout
-
-All main directories must sit at the **root (`/`)** of your formatted SD card:
-
-```text
-/ (SD Card Root)
-├── games/                      # Root games folder
-│   ├── ejs/                    # EmulatorJS core assets
-│   │   └── data/               # EmulatorJS engine & loader files
-│   │       └── loader.js
-│   └── roms/                   # Game ROM files (.gb, .gbc, .nes)
-├── music/                      # Audio storage directory (.mp3 files)
-└── www/                        # Main web application & core UI framework
-    ├── index.html              # Primary landing page
-    └── sites.html              # Site navigation index
-
-# 📚 Beacon Guide — Downloading & Extracting Kiwix (ZIM) Sites
-
-This guide explains how to download offline web archives (like Wikipedia, WikiMed, or Stack Overflow) from Kiwix and unpack them into raw static HTML for hosting directly on the Beacon server.
-
----
-
-## 🎯 Why Extract ZIM Files?
-
-Kiwix packages entire websites into single compressed `.zim` archives. While Kiwix apps read these files using built-in database indexing, microcontrollers like the ESP32 run faster and use far less RAM by serving standard static HTML, CSS, and image files. 
-
-Unpacking ZIM archives with `zimdump` converts the site into standard web files that the ESP32 web server can serve instantly over Wi-Fi.
-
----
-
-## 📥 Step 1: Download ZIM Archives from Kiwix
-
-1. Visit the official **[Kiwix Content Library](https://library.kiwix.org/)**.
-2. Filter by language, topic, or size. Popular choices for offline/emergency servers include:
-   * **WikiMed / Sanitation:** Offline medical guides.
-   * **Wikipedia (Top 100k / Mini):** Essential reference articles.
-   * **Stack Overflow / Super User:** Offline programming and technical support.
-   * **Wikivoyage:** Offline travel and survival location guides.
-3. Download the desired `.zim` file to your computer.
-
-> 💡 **Storage Tip (Full vs. No-Pic):**  
-> * **`_nopic` / `_mini`:** Excludes images to drastically reduce file size (e.g., a multi-gigabyte wiki shrunk to a few hundred megabytes). Ideal for smaller SD cards.
-> * **`_max` / `_all`:** Includes all text and full-resolution images.
-
----
-
-## 🛠️ Step 2: Install `zim-tools`
-
+├── library/                   # Offline books, reference guides, and technical manuals
+│   └── [book-folder]/
+│       └── index.html
+└── infoweb/                   # Self-contained offline websites (Kiwix extractions)
+    └── [unpacked-site]/
+        └── index.html
 To unpack `.zim` files on your computer, you need `zimdump` from the **zim-tools** package.
 
 * **Linux (Ubuntu/Debian):**
