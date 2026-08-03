@@ -253,12 +253,12 @@ This master repository guide details the root-level folder structures for both t
 
 ---
 
-## 📂 1. ESP32-P4 Storage Layout (Library & Offline Web Focus)
+## 📂 1. ESP32-P4 and s3 wroom2 Storage Layout (
 
-For the ESP32-P4 target, all major content directories sit at the **root (`/`)** level of the storage drive alongside `www/`. Keeping path depths shallow reduces file system traversal overhead and improves file-serving performance.
+
 
 ```text
-/ (Storage Root)
+p4/ (Storage Root)
 ├── www/                       # Core Web UI & Application Framework
 │   ├── index.html             # Primary landing page
 │   └── sites.html             # System navigation index
@@ -275,4 +275,32 @@ To unpack `.zim` files on your computer, you need `zimdump` from the **zim-tools
   ```bash
   sudo apt update
   sudo apt install zim-tools
+
+
+
+
+
+# 📡 Beacon ESP32-S3 WROOM-2 — Media & Emulation Setup Guide
+
+This guide details the SD card directory layout, file dependencies, and deployment steps for hosting the Beacon music player and retro game emulator on the **ESP32-S3 WROOM-2**.
+
+---
+
+## 📂 SD Card Directory Layout
+
+All primary folders must sit at the **root (`/`)** of your formatted FAT32 SD card:
+
+```text
+s3wroom2/ (SD Card Root)
+├── games/                     # Game emulation root folder
+│   ├── ejs/                   # EmulatorJS core engine files
+│   │   └── data/              # Emulator assets (requires loader.js)
+│   └── roms/                  # Game ROM files (.gb)
+├── music/                     # Audio storage directory (.mp3 files)
+└── www/                       # Core Web UI framework
+    ├── index.html             # Main system landing page
+    ├── sites.html             # System menu/navigation index
+    ├── music.html             # HTML5 audio player interface
+    ├── games.html             # Game library & selection portal
+    └── play.html              # EmulatorJS launch & canvas window
 
