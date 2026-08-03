@@ -266,10 +266,12 @@ All primary directories sit at the **root (`/`)** of your storage drive (SD card
     ├── library/                   # Offline books, reference guides, and manuals
     └── infoweb/                   # Self-contained offline websites and web apps
        └── [unpacked-site]/
-       
-   
 
-   # 📡 Beacon ESP32-S3 — SD Card Directory Layout & Setup Guide (32gb sd)
+---       
+
+## 📡 Beacon ESP32-S3 — SD Card Directory Layout & Setup Guide
+
+
 
 This guide details the required SD card folder structure and media setup for running the Beacon web server, music player, and game emulator on the ESP32-S3 WROOM-2.
 
