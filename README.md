@@ -1,3 +1,35 @@
+# 📡 Project Beacon
+
+> **An air-gapped, ultra-low-power emergency information server, long-range LoRa mesh communicator, and local weather station.**
+
+---
+
+## 💡 Why Project Beacon Was Built
+
+In severe weather events, natural disasters, or power grid failures, centralized telecommunications are usually the first point of failure. When cell towers lose power and internet service drops, two vital lifelines disappear instantly: **access to information** (medical emergency guides, survival handbooks, repair manuals) and **the ability to communicate** with neighbors and loved ones.
+
+**Project Beacon** was created to solve this problem by bringing both lifelines into a single, compact, off-grid appliance. Operating entirely on standard 5V USB power banks or small solar panels, Beacon creates an instant local Wi-Fi portal and long-range radio network—requiring **zero cellular service, zero internet connections, and zero external infrastructure.**
+
+---
+
+## 🎯 Target Use Cases & Scenarios
+
+* 🌪️ **Natural Disasters & Severe Weather:** Deploy during hurricanes, tornadoes, floods, or winter storms when local cell towers suffer blackouts or tower congestion.
+* 📻 **Emergency Community Mesh Communications:** Establish decentralized, long-range text messaging across miles between neighborhood nodes without relying on third-party cellular carriers or ISPs.
+* 🏕️ **Off-Grid & Backcountry Expeditions:** Provide hikers, overlanders, or off-grid homesteads with offline maps, survival literature, and micro-climate forecasting where cell service doesn't exist.
+* 🏥 **Offline Medical & Survival Reference Hub:** Host complete offline copies of Wikipedia, emergency medical guides, and technical manuals accessible from any smartphone, tablet, or laptop via a local captive Wi-Fi portal.
+
+---
+
+## 🚀 Motivation & Mission
+
+I undertook this project to build a fully open-source, modular hardware appliance that proves what modern low-power microcontrollers are truly capable of. 
+
+Rather than relying on expensive, power-hungry single-board computers or proprietary commercial gear, Project Beacon combines the high-compute RISC-V architecture of the **ESP32-P4** with specialized **ESP32-S3** auxiliary microcontrollers. By dividing the workload—allocating heavy ZIM database search indexing to the main P4 board, LoRa packet routing to a dedicated radio node, local media streaming to a secondary S3, and micro-climate barometric analysis to a compact sensor node—the system achieves high performance while pulling minimal power.
+
+This repository contains everything needed to build your own Beacon node from scratch: open-source C++/ESP-IDF firmware, pin-by-pin hardware schematics, 3D-printable enclosure files (`.3mf`), and step-by-step flashing guides.
+
+
 # The_Beacon
 Low-power, 5V ESP32 off-grid survival appliance featuring 256GB offline Wikipedia, LoRa mesh messaging, and environmental weather sensing.
 ## 📦 Bill of Materials (BOM)
@@ -215,4 +247,86 @@ Due to normal FDM thermal contraction and inner-wall extrusion squish, printed h
 
 1. **Drill Before Fastening:** Always chase/clean out every screw hole with a drill bit sized for the bolts( around -.5mm of actual size).
 
+# 📡 Beacon Web Server — Directory Layout & Content Loading Guide
+
+This guide details the root-level folder structure used to host static web interfaces, offline reference libraries, and media archives on the **Beacon** storage drive.
+
+---
+
+## 📂 Root Directory Layout for p4 sd card(+256 for best info)
+
+All primary directories sit at the **root (`/`)** of your storage drive (SD card or flash file system):
+
+```text
+/ (Storage Root)
+├── www/                       # Main web application & UI framework
+│   ├── index.html             # Landing page
+│   └── sites.html             # System navigation index
+├── content/                   # Raw media archives, audio files, and downloads
+    ├── library/                   # Offline books, reference guides, and manuals
+    └── infoweb/                   # Self-contained offline websites and web apps
+       └── [unpacked-site]/
+       
    
+
+   # 📡 Beacon ESP32-S3 — SD Card Directory Layout & Setup Guide (32gb sd)
+
+This guide details the required SD card folder structure and media setup for running the Beacon web server, music player, and game emulator on the ESP32-S3 WROOM-2.
+
+---
+
+## 📂 SD Card Directory Layout
+
+All main directories must sit at the **root (`/`)** of your formatted SD card:
+
+```text
+/ (SD Card Root)
+├── games/                      # Root games folder
+│   ├── ejs/                    # EmulatorJS core assets
+│   │   └── data/               # EmulatorJS engine & loader files
+│   │       └── loader.js
+│   └── roms/                   # Game ROM files (.gb, .gbc, .nes)
+├── music/                      # Audio storage directory (.mp3 files)
+└── www/                        # Main web application & core UI framework
+    ├── index.html              # Primary landing page
+    └── sites.html              # Site navigation index
+
+# 📚 Beacon Guide — Downloading & Extracting Kiwix (ZIM) Sites
+
+This guide explains how to download offline web archives (like Wikipedia, WikiMed, or Stack Overflow) from Kiwix and unpack them into raw static HTML for hosting directly on the Beacon server.
+
+---
+
+## 🎯 Why Extract ZIM Files?
+
+Kiwix packages entire websites into single compressed `.zim` archives. While Kiwix apps read these files using built-in database indexing, microcontrollers like the ESP32 run faster and use far less RAM by serving standard static HTML, CSS, and image files. 
+
+Unpacking ZIM archives with `zimdump` converts the site into standard web files that the ESP32 web server can serve instantly over Wi-Fi.
+
+---
+
+## 📥 Step 1: Download ZIM Archives from Kiwix
+
+1. Visit the official **[Kiwix Content Library](https://library.kiwix.org/)**.
+2. Filter by language, topic, or size. Popular choices for offline/emergency servers include:
+   * **WikiMed / Sanitation:** Offline medical guides.
+   * **Wikipedia (Top 100k / Mini):** Essential reference articles.
+   * **Stack Overflow / Super User:** Offline programming and technical support.
+   * **Wikivoyage:** Offline travel and survival location guides.
+3. Download the desired `.zim` file to your computer.
+
+> 💡 **Storage Tip (Full vs. No-Pic):**  
+> * **`_nopic` / `_mini`:** Excludes images to drastically reduce file size (e.g., a multi-gigabyte wiki shrunk to a few hundred megabytes). Ideal for smaller SD cards.
+> * **`_max` / `_all`:** Includes all text and full-resolution images.
+
+---
+
+## 🛠️ Step 2: Install `zim-tools`
+
+To unpack `.zim` files on your computer, you need `zimdump` from the **zim-tools** package.
+
+* **Linux (Ubuntu/Debian):**
+  ```bash
+  sudo apt update
+  sudo apt install zim-tools
+
