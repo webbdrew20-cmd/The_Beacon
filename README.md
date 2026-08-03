@@ -213,6 +213,6 @@ Pre-configured printable model files for the Project Beacon enclosure, internal 
 
 Due to normal FDM thermal contraction and inner-wall extrusion squish, printed holes will be slightly tight straight off the build plate.
 
-1. **Drill Before Fastening:** Always chase/clean out every screw hole with a drill bit sized for your chosen thread diameter before driving fasteners or heat-set inserts.
-2. **Proper Thread Engagement:** Pre-drilling cleans up layer line ridges, prevents the printed walls from delaminating or splitting along layer boundaries, and ensures screw threads bite cleanly into solid plastic for a rigid, secure hold.
+1. **Drill Before Fastening:** Always chase/clean out every screw hole with a drill bit sized for the bolts( around -.5mm of actual size).
+
    
