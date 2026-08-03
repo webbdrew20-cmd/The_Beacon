@@ -40,8 +40,8 @@ Project Beacon relies on a modular, multi-controller architecture to handle heav
 | Component | Model / Variant | Qty | Function in Project Beacon |
 | :--- | :--- | :---: | :--- |
 | **Main Processing Node** | Waveshare ESP32-P4 Wi-Fi 6 Basic Kit | 1 | Primary server host (High-performance RISC-V compute, web hosting, offline database indexing) |
-| **Mesh Gateway / Controller** | ESP32-S3-WROOM-2 | 1 | Dedicated controller managing communication pipelines and local display UI |
-| **Satellite / Compact Nodes** | ESP32-S3 Super Mini | 2 | Ultra-compact controllers for remote sensor gathering and auxiliary radio endpoints |
+| **Entertainment** | ESP32-S3-WROOM-2 | 1 | Dedicated controller managing communication pipelines and local display UI |
+|**Weather/Lora Nodes** | ESP32-S3 Super Mini | 2 | Ultra-compact controllers for remote sensor gathering and auxiliary radio endpoints |
 
 ### 💾 Storage & Data
 | Component | Model / Variant | Qty | Function in Project Beacon |
